@@ -35,7 +35,7 @@ import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
 import io.circe.generic.auto._
 import hmda.api.http.codec.filing.submission.SubmissionStatusCodec._
 import hmda.api.http.codec.ErrorResponseCodec._
-import hmda.api.http.filing.FilingResponseUtils.failedResponse
+import hmda.util.http.FilingResponseUtils._
 import hmda.api.http.model.ErrorResponse
 import hmda.messages.submission.SubmissionCommands.GetSubmission
 import hmda.model.filing.submission._
@@ -118,7 +118,7 @@ trait UploadHttpApi extends HmdaTimeDirectives {
                   )
               }
             case Failure(error) =>
-              failedResponse(uri, error)
+              failedResponse(StatusCodes.InternalServerError, uri, error)
           }
         }
     }

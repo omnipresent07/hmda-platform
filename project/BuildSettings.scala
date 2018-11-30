@@ -10,7 +10,6 @@ object BuildSettings {
   val hmdaBuildSettings = Defaults.coreDefaultSettings ++
     Seq(
       organization := buildOrganization,
-      version      := buildVersion,
       scalaVersion := buildScalaVersion,
       scalacOptions ++= Seq(
         "-Xlint",

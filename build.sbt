@@ -91,7 +91,8 @@ lazy val common = (project in file("common"))
 lazy val `hmda-platform` = (project in file("hmda"))
   .enablePlugins(JavaServerAppPackaging,
                  sbtdocker.DockerPlugin,
-                 AshScriptPlugin)
+                 AshScriptPlugin,
+                 GitVersioning)
   .settings(hmdaBuildSettings: _*)
   .settings(
     Seq(

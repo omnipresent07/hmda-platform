@@ -227,12 +227,10 @@ object HmdaValidationError
               replyTo ! signed
             }
           } else {
-            println("entered first else")
             replyTo ! SubmissionNotReadyToBeSigned(submissionId)
             Effect.none
           }
         } else {
-          println("entered second else")
           replyTo ! SubmissionNotReadyToBeSigned(submissionId)
           Effect.none
         }

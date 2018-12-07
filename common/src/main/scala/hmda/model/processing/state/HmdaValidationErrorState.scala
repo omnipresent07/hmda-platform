@@ -51,7 +51,7 @@ case class HmdaValidationErrorState(statusCode: Int = 1,
   def updateStatusCode(code: Int): HmdaValidationErrorState =
     this.copy(statusCode = code)
 
-  def containsEdits(): Boolean =
+  def isEditsEmpty(): Boolean =
     syntactical.isEmpty && validity.isEmpty && validity.isEmpty && quality.isEmpty && `macro`.isEmpty
 
 }

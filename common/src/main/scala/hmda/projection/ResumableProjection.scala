@@ -20,7 +20,7 @@ import scala.concurrent.Future
 trait ResumableProjection {
 
   val name: String
-
+  //this is a test
   implicit val timeout: Timeout
 
   case class ResumableProjectionState(offset: Offset = NoOffset)

@@ -60,6 +60,7 @@ object Census {
     "MP" -> State("69", "Northern Mariana Islands"),
     "PW" -> State("70", "Palau"),
     "PR" -> State("72", "Puerto Rico"),
-    "VI" -> State("78", "Virgin Islands")
+    "VI" -> State("78", "Virgin Islands"),
+    "VI" -> State("78", "cool change")
   )
 }

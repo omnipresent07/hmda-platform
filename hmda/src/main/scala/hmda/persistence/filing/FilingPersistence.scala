@@ -100,6 +100,13 @@ object FilingPersistence
           replyTo ! maybeSubmission
           Effect.none
 
+        case GetSubmissionSummary(submissionId, replyTo) =>
+          val maybeSubmission = state.submissions
+            .filter(_.id.sequenceNumber == submissionId.sequenceNumber)
+            .headOption
+          replyTo ! maybeSubmission
+          Effect.none
+
         case GetSubmissions(replyTo) =>
           replyTo ! state.submissions
           Effect.none

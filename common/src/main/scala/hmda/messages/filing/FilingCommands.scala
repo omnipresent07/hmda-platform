@@ -3,7 +3,7 @@ package hmda.messages.filing
 import akka.actor.typed.ActorRef
 import hmda.messages.CommonMessages.Command
 import hmda.messages.filing.FilingEvents.FilingCreated
-import hmda.model.filing.submission.Submission
+import hmda.model.filing.submission.{Submission, SubmissionId}
 import hmda.model.filing.{Filing, FilingDetails, FilingStatus}
 
 object FilingCommands {
@@ -28,6 +28,10 @@ object FilingCommands {
       extends FilingCommand
 
   final case class GetLatestSubmission(replyTo: ActorRef[Option[Submission]])
+      extends FilingCommand
+
+  final case class GetSubmissionSummary(submissionId: SubmissionId,
+                                        replyTo: ActorRef[Option[Submission]])
       extends FilingCommand
 
   final case class UpdateSubmission(submission: Submission,

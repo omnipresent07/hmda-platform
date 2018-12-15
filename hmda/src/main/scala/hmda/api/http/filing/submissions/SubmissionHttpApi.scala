@@ -12,7 +12,11 @@ import hmda.api.http.directives.HmdaTimeDirectives
 import akka.http.scaladsl.server.Directives._
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
-import hmda.messages.filing.FilingCommands.{GetFiling, GetLatestSubmission}
+import hmda.messages.filing.FilingCommands.{
+  GetFiling,
+  GetLatestSubmission,
+  GetSubmissionSummary
+}
 import hmda.messages.institution.InstitutionCommands.GetInstitution
 import hmda.messages.submission.SubmissionCommands.CreateSubmission
 import hmda.messages.submission.SubmissionEvents.SubmissionCreated
@@ -99,6 +103,48 @@ trait SubmissionHttpApi extends HmdaTimeDirectives {
         }
     }
 
+  def submissionSummary(oAuth2Authorization: OAuth2Authorization): Route =
+    path(
+      "institutions" / Segment / "filings" / Segment / "submissions" / IntNumber / "summary") {
+      (lei, period, seqNr) =>
+        oAuth2Authorization.authorizeTokenWithLei(lei) { _ =>
+          timedGet { uri =>
+            val submissionId = SubmissionId(lei, period, seqNr)
+
+            val institutionPersistence =
+              sharding.entityRefFor(InstitutionPersistence.typeKey,
+                                    s"${InstitutionPersistence.name}-$lei")
+
+            val fInstitution
+              : Future[Option[Institution]] = institutionPersistence ? (
+                ref => GetInstitution(ref)
+            )
+
+            val filingPersistence =
+              sharding.entityRefFor(FilingPersistence.typeKey,
+                                    s"${FilingPersistence.name}-$lei-$period")
+
+            val fSummary: Future[Option[Submission]] = filingPersistence ? (
+                ref => GetSubmissionSummary(submissionId, ref))
+
+            val fCheck = for {
+              i <- fInstitution
+              s <- fSummary
+            } yield (i, s)
+
+            onComplete(fCheck) {
+              case Success(check) =>
+                check match {
+                  case (maybeInstitution, maybeSummary) =>
+                    complete(ToResponseMarshallable(maybeSummary))
+                }
+              case Failure(error) =>
+                failedResponse(StatusCodes.InternalServerError, uri, error)
+            }
+          }
+        }
+    }
+
   //institutions/<lei>/filings/<period>/submissions/latest
   def submissionLatestPath(oAuth2Authorization: OAuth2Authorization): Route =
     path(
@@ -131,7 +177,7 @@ trait SubmissionHttpApi extends HmdaTimeDirectives {
       cors() {
         encodeResponse {
           submissionCreatePath(oAuth2Authorization) ~ submissionLatestPath(
-            oAuth2Authorization)
+            oAuth2Authorization) ~ submissionSummary(oAuth2Authorization)
         }
       }
     }

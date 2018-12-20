@@ -10,12 +10,16 @@ import akka.stream.scaladsl.{Keep, Sink, Source}
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
 import hmda.analytics.query.{
+  LarComponent,
+  LarConverter,
   TransmittalSheetComponent,
-  TransmittalSheetConverter,
+  TransmittalSheetConverter
 }
 import hmda.messages.pubsub.HmdaTopics.{analyticsTopic, signTopic}
+import hmda.model.filing.lar.LoanApplicationRegister
 import hmda.model.filing.submission.SubmissionId
 import hmda.model.filing.ts.TransmittalSheet
+import hmda.parser.filing.lar.LarCsvParser
 import hmda.parser.filing.ts.TsCsvParser
 import hmda.publication.KafkaUtils.kafkaHosts
 import org.apache.kafka.clients.consumer.ConsumerConfig
@@ -55,7 +59,9 @@ object HmdaAnalyticsApp extends App with TransmittalSheetComponent {
   val parallelism = config.getInt("hmda.analytics.parallelism")
 
   val transmittalSheetRepository = new TransmittalSheetRepository(dbConfig)
+//  val larRepository = new LarRepository(dbConfig)
   val db = transmittalSheetRepository.db
+//  val larDb = transmittalSheetRepository.db
 
   val consumerSettings: ConsumerSettings[String, String] =
     ConsumerSettings(kafkaConfig,
@@ -80,7 +86,9 @@ object HmdaAnalyticsApp extends App with TransmittalSheetComponent {
     Source
       .single(msg)
       .map(msg => SubmissionId(msg))
-      .map(id => addTs(id))
+      .map { id =>
+        addTs(id)
+      }
       .toMat(Sink.ignore)(Keep.right)
       .run()
   }
@@ -94,11 +102,29 @@ object HmdaAnalyticsApp extends App with TransmittalSheetComponent {
       .filter(t => t.LEI != "" && t.institutionName != "")
       .map(ts => TransmittalSheetConverter(ts))
       .mapAsync(1) { ts =>
+        println("This is the ts: " + ts)
         for {
           delete <- transmittalSheetRepository.deleteByLei(ts.lei)
           insert <- transmittalSheetRepository.insert(ts)
         } yield insert
       }
       .runWith(Sink.ignore)
+
+//    readRawData(submissionId)
+//      .map(l => l.data)
+//      .drop(1)
+//      .map(s => LarCsvParser(s))
+//      .map(_.getOrElse(LoanApplicationRegister()))
+//      .filter(lar => lar.larIdentifier.LEI != "" && lar.larIdentifier.id != "")
+//      .map(lar => LarConverter(lar))
+//      .mapAsync(1) { lar =>
+//        println("This is the lar: " + lar)
+//        for {
+//          delete <- larRepository.deleteByLei(lar.lei)
+//          insert <- larRepository.insert(lar)
+//        } yield insert
+//      }
+//      .runWith(Sink.ignore)
+
   }
 }

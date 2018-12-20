@@ -43,7 +43,8 @@ lazy val akkaPersistenceDeps =
 lazy val akkaHttpDeps = Seq(akkaHttp, akkaHttp2, akkaHttpTestkit, akkaHttpCirce)
 lazy val circeDeps = Seq(circe, circeGeneric, circeParser)
 
-lazy val slickDeps = Seq(slick, slickHikaryCP, postgres, h2)
+lazy val slickDeps =
+  Seq(slick, slickHikaryCP, shapeless, slickless, postgres, h2)
 
 lazy val scalafmtSettings = Seq(
   scalafmtOnCompile in ThisBuild := true,

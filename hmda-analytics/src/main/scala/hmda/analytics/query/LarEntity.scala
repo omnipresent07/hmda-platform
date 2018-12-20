@@ -75,10 +75,10 @@ case class LarEntity(
     otherDenialReason: String = "",
     totalLoanCosts: String = "",
     totalPoints: String = "",
-//    originationCharge: String = "" //,
-    discountPoints: String = "",
+//    originationCharges: String = "" //,75
+//    discountPoints: String = "",
 //    lenderCredits: String = "" //,
-    interestRate: String = "" //,
+//    interestRate: String = "" //,
 //    paymentPenalty: String = "",
 //    debtToIncome: String = "",
 //    loanValueRatio: String = "",

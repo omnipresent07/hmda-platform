@@ -79,11 +79,11 @@ object LarConverter {
       lar.denial.denialReason4.code, //71
       lar.denial.otherDenialReason,
       lar.loanDisclosure.totalLoanCosts,
-      lar.loanDisclosure.totalPointsAndFees,
+      lar.loanDisclosure.totalPointsAndFees //,
 //      lar.loanDisclosure.originationCharges //, //75
-      lar.loanDisclosure.discountPoints,
+//      lar.loanDisclosure.discountPoints,
 //      lar.loanDisclosure.lenderCredits //,
-      lar.loan.interestRate //,
+//      lar.loan.interestRate //,
 //      lar.loan.prepaymentPenaltyTerm //,
 //      lar.loan.debtToIncomeRatio,
 //      lar.loan.combinedLoanToValueRatio,

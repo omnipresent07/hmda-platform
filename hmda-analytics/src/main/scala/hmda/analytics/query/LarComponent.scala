@@ -98,10 +98,10 @@ trait LarComponent {
     def otherDenialReason = column[String]("other_denial_reason")
     def totalLoanCosts = column[String]("total_loan_costs")
     def totalPoints = column[String]("total_points")
-//    def someelse = column[String]("origination_charges")
-    def discountPoints = column[String]("discount_points")
+//    def originationCharges = column[String]("origination_charges") //75
+//    def discountPoints = column[String]("discount_points")
 //    def lenderCredits = column[String]("lender_credits")
-    def interestRate = column[String]("interest_rate")
+//    def interestRate = column[String]("interest_rate")
 //    def paymentPenalty = column[String]("payment_penalty")
 //    def debtToIncome = column[String]("debt_to_incode") //80
 //    def loanValueRatio = column[String]("loan_value_ratio")
@@ -198,10 +198,10 @@ trait LarComponent {
           otherDenialReason ::
           totalLoanCosts ::
           totalPoints ::
-//          someelse ::
-          discountPoints ::
+//          originationCharges :: //75
+//          discountPoints ::
 //          lenderCredits ::
-          interestRate ::
+//          interestRate ::
 //          paymentPenalty ::
 //          debtToIncome ::
 //          loanValueRatio ::

@@ -19,7 +19,7 @@ trait LarComponent {
     def id = column[Int]("id")
     def lei = column[String]("lei")
     def uli = column[String]("uli")
-    def applicationDate = column[Int]("application_date")
+    def appDate = column[String]("application_date")
     def loanType = column[Int]("loan_type")
     def loanPurpose = column[Int]("loan_purpose")
     def preapproval = column[Int]("preapproval")
@@ -39,7 +39,7 @@ trait LarComponent {
     def ethnicityApplicant3 = column[Int]("ethnicity_applicant_3")
     def ethnicityApplicant4 = column[Int]("ethnicity_applicant_4")
     def ethnicityApplicant5 = column[Int]("ethnicity_applicant_5")
-    def otherHispanicApplicant = column[String]("other_hispanic_applicant")
+    def otherHispanicApplicant = column[String]("other_hispanic_applicant") //24
     def ethnicityCoApplicant1 = column[Int]("ethnicity_co_applicant_1")
     def ethnicityCoApplicant2 = column[Int]("ethnicity_co_applicant_2")
     def ethnicityCoApplicant3 = column[Int]("ethnicity_co_applicant_3")
@@ -94,53 +94,59 @@ trait LarComponent {
     def denialReason1 = column[Int]("denial_reason1")
     def denialReason2 = column[Int]("denial_reason2")
     def denialReason3 = column[Int]("denial_reason3")
-    def denialReason4 = column[Int]("denial_reason4")
+    def denialReason4 = column[Int]("denial_reason4") //71
     def otherDenialReason = column[String]("other_denial_reason")
     def totalLoanCosts = column[String]("total_loan_costs")
     def totalPoints = column[String]("total_points")
-    def originationCharges = column[String]("origination_charges")
+//    def someelse = column[String]("origination_charges")
     def discountPoints = column[String]("discount_points")
-    def lenderCredits = column[String]("lender_credits")
+//    def lenderCredits = column[String]("lender_credits")
     def interestRate = column[String]("interest_rate")
-    def paymentPenalty = column[String]("payment_penalty")
-    def debtToIncome = column[String]("debt_to_incode")
-    def loanValueRatio = column[String]("loan_value_ratio")
-    def loanTerm = column[String]("loan_term")
-    def rateSpreadIntro = column[String]("rate_spread_intro")
-    def baloonPayment = column[Int]("baloon_payment")
-    def insertOnlyPayment = column[Int]("insert_only_payment")
-    def amortization = column[Int]("amortization")
-    def otherAmortization = column[Int]("other_amortization")
-    def propertyValues = column[Int]("proprerty_valeue")
-    def homeSecurityPolicy = column[String]("home_security_policy")
-    def landPropertyInterest = column[Int]("lan_property_interest")
-    def totalUnits = column[Int]("total_uits")
-    def mfAffordable = column[String]("mf_affordable")
-    def payable = column[Int]("payable")
-    def nmls = column[Int]("nmls")
-    def aus1 = column[Int]("aus1")
-    def aus2 = column[Int]("aus2")
-    def aus3 = column[Int]("aus3")
-    def aus4 = column[Int]("aus4")
-    def aus5 = column[Int]("aus5")
-    def otheraus = column[Int]("other_aus")
-    def aus1Result = column[Int]("aus1_result")
-    def aus2Result = column[Int]("aus2_result")
-    def aus3Result = column[Int]("aus3_result")
-    def aus4Result = column[Int]("aus4_result")
-    def aus5Result = column[Int]("aus5_result")
-    def otherAusResult = column[String]("other_aus_result")
-    def reverse = column[Int]("reverse")
-    def ausResult = column[Int]("aus_result")
-    def reverseMortgage = column[Int]("reverse_mortgage")
-    def lineOfCredits = column[Int]("line_of_credits")
-    def businessOrCommercial = column[Int]("business_or_commercial")
+//    def paymentPenalty = column[String]("payment_penalty")
+//    def debtToIncome = column[String]("debt_to_incode") //80
+//    def loanValueRatio = column[String]("loan_value_ratio")
+//    def loanTerm = column[String]("loan_term")
+//    def rateSpreadIntro = column[String]("rate_spread_intro")
+//    def baloonPayment = column[Int]("baloon_payment")
+//    def insertOnlyPayment = column[Int]("insert_only_payment")
+//    def amortization = column[Int]("amortization") //86
+//    def otherAmortization = column[Int]("other_amortization")
+//    def propertyValues = column[String]("proprerty_valeue")
+//    def homeSecurityPolicy = column[Int]("home_security_policy")
+//    def landPropertyInterest = column[Int]("lan_property_interest") //90
+//    def totalUnits = column[Int]("total_uits")
+//    def mfAffordable = column[String]("mf_affordable")
+//    def applicationSubmission = column[String]("application_submission")
+//    def payable = column[Int]("payable")
+//    def nmls = column[Int]("nmls")
+//    def aus1 = column[Int]("aus1")
+//    def aus2 = column[Int]("aus2")
+//    def aus3 = column[Int]("aus3")
+//    def aus4 = column[Int]("aus4")
+//    def aus5 = column[Int]("aus5")
+//    def otheraus = column[Int]("other_aus")
+//    def aus1Result = column[Int]("aus1_result")
+//    def aus2Result = column[Int]("aus2_result")
+//    def aus3Result = column[Int]("aus3_result")
+//    def aus4Result = column[Int]("aus4_result")
+//    def aus5Result = column[Int]("aus5_result")
+//    def otherAusResult = column[String]("other_aus_result")
+//    def reverseMortgage = column[Int]("reverse_mortgage")
+//    def lineOfCredits = column[Int]("line_of_credits")
+//    def businessOrCommercial = column[Int]("business_or_commercial")
 
-    override def * =
+    def * =
       (
-        id :: lei :: uli :: applicationDate :: loanType :: loanPurpose :: preapproval :: constructionMethod
-          :: occupancyType :: loanAmount :: actionTakenType :: actionTakenDate :: street :: city :: state :: zip :: county :: tract ::
-          ethnicityApplicant1 :: ethnicityApplicant2 :: ethnicityApplicant3 :: ethnicityApplicant4 :: ethnicityApplicant5 ::
+        id :: lei
+          :: uli
+          :: appDate
+          :: loanType
+          :: loanPurpose
+          :: preapproval :: constructionMethod
+          :: occupancyType :: loanAmount
+          :: actionTakenType :: actionTakenDate :: street :: city :: state :: zip :: county :: tract ::
+          ethnicityApplicant1 :: ethnicityApplicant2
+          :: ethnicityApplicant3 :: ethnicityApplicant4 :: ethnicityApplicant5 ::
           otherHispanicApplicant ::
           ethnicityCoApplicant1 ::
           ethnicityCoApplicant2 ::
@@ -188,70 +194,71 @@ trait LarComponent {
           denialReason1 ::
           denialReason2 ::
           denialReason3 ::
-          denialReason4 ::
+          denialReason4 :: //71
           otherDenialReason ::
           totalLoanCosts ::
           totalPoints ::
-          originationCharges ::
+//          someelse ::
           discountPoints ::
-          lenderCredits ::
+//          lenderCredits ::
           interestRate ::
-          paymentPenalty ::
-          debtToIncome ::
-          loanValueRatio ::
-          loanTerm ::
-          rateSpreadIntro ::
-          baloonPayment ::
-          insertOnlyPayment ::
-          amortization ::
-          otherAmortization ::
-          propertyValues ::
-          homeSecurityPolicy ::
-          landPropertyInterest ::
-          totalUnits ::
-          mfAffordable ::
-          payable ::
-          nmls ::
-          aus1 ::
-          aus2 ::
-          aus3 ::
-          aus4 ::
-          aus5 ::
-          otheraus ::
-          aus1Result ::
-          aus2Result ::
-          aus3Result ::
-          aus4Result ::
-          aus5Result ::
-          otherAusResult ::
-          reverse ::
-          ausResult ::
-          reverseMortgage ::
-          lineOfCredits ::
-          businessOrCommercial ::
-
+//          paymentPenalty ::
+//          debtToIncome ::
+//          loanValueRatio ::
+//          loanTerm ::
+//          rateSpreadIntro ::
+//          baloonPayment ::
+//          insertOnlyPayment ::
+//          amortization ::
+//          otherAmortization ::
+//          propertyValues ::
+//          homeSecurityPolicy ::
+//          landPropertyInterest ::
+//          totalUnits ::
+//          mfAffordable ::
+//          applicationSubmission ::
+//          payable ::
+//          nmls ::
+//          aus1 ::
+//          aus2 ::
+//          aus3 ::
+//          aus4 ::
+//          aus5 ::
+//          otheraus ::
+//          aus1Result ::
+//          aus2Result ::
+//          aus3Result ::
+//          aus4Result ::
+//          aus5Result ::
+//          otherAusResult ::
+//          reverseMortgage ::
+//          lineOfCredits ::
+//          businessOrCommercial
+//          ::
           HNil
       ).mappedWith(Generic[LarEntity])
   }
 
-  val larTable = TableQuery[LarTable]
+//  val larTable = TableQuery[LarTable]
+//
+//  class LarRepository(val config: DatabaseConfig[JdbcProfile])
+//      extends TableRepository[LarTable, String] {
+//
+//    override val table: config.profile.api.TableQuery[LarTable] = larTable
+//
+//    override def getId(row: LarTable): config.profile.api.Rep[Id] =
+//      row.lei
+//
+//    def insert(lar: LarEntity): Future[Int] = {
+//      db.run(table += lar)
+//    }
+//
+//    def deleteByLei(lei: String): Future[Int] = {
+//      db.run(table.filter(_.lei === lei).delete)
+//    }
+//
+//  }
 
-  class LarRepository(val config: DatabaseConfig[JdbcProfile])
-      extends TableRepository[LarTable, String] {
-
-    override val table: config.profile.api.TableQuery[LarTable] = larTable
-
-    override def getId(row: LarTable): config.profile.api.Rep[Id] =
-      row.lei
-
-    def insert(lar: LarEntity): Future[Int] = {
-      db.run(table += lar)
-    }
-
-    def deleteByLei(lei: String): Future[Int] = {
-      db.run(table.filter(_.lei === lei).delete)
-    }
-
-  }
+//  }
 
 }

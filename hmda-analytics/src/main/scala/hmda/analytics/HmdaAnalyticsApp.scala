@@ -31,7 +31,10 @@ import hmda.query.HmdaQuery.readRawData
 import scala.concurrent.Future
 import scala.concurrent.duration._
 
-object HmdaAnalyticsApp extends App with TransmittalSheetComponent {
+object HmdaAnalyticsApp
+    extends App
+    with TransmittalSheetComponent
+    with LarComponent {
 
   val log = LoggerFactory.getLogger("hmda")
 
@@ -61,7 +64,7 @@ object HmdaAnalyticsApp extends App with TransmittalSheetComponent {
   val transmittalSheetRepository = new TransmittalSheetRepository(dbConfig)
 //  val larRepository = new LarRepository(dbConfig)
   val db = transmittalSheetRepository.db
-//  val larDb = transmittalSheetRepository.db
+  val larDb = transmittalSheetRepository.db
 
   val consumerSettings: ConsumerSettings[String, String] =
     ConsumerSettings(kafkaConfig,

@@ -1,0 +1,20 @@
+[0m[[0m[0minfo[0m] [0m[0mLoading settings from idea.sbt ...[0m
+[0m[[0m[0minfo[0m] [0m[0mLoading global plugins from /Users/sharmab/.sbt/1.0/plugins[0m
+[0m[[0m[0minfo[0m] [0m[0mLoading settings from assembly.sbt,docker.sbt,grpc.sbt,revolver.sbt,scalafmt.sbt,scalajs.sbt,scalapb.sbt,scoverage.sbt ...[0m
+[0m[[0m[0minfo[0m] [0m[0mLoading project definition from /Users/sharmab/new-friday/hmda-platform/project[0m
+[0m[[0m[0minfo[0m] [0m[0mLoading settings from build.sbt ...[0m
+[0m[[0m[0minfo[0m] [0m[0mLoading settings from build.sbt ...[0m
+[0m[[0m[0minfo[0m] [0m[0mLoading settings from build.sbt ...[0m
+[0m[[0m[0minfo[0m] [0m[0mLoading settings from build.sbt ...[0m
+[0m[[0m[0minfo[0m] [0m[0mLoading settings from build.sbt ...[0m
+[0m[[0m[0minfo[0m] [0m[0mLoading settings from build.sbt ...[0m
+[0m[[0m[0minfo[0m] [0m[0mSet current project to hmda-root (in build file:/Users/sharmab/new-friday/hmda-platform/)[0m
+[0m[[0m[32msuccess[0m] [0m[0mTotal time: 2 s, completed Dec 20, 2018 9:27:23 AM[0m
+[0m[[0m[0minfo[0m] [0m[0mExecuting in batch mode. For better performance use sbt's shell[0m
+[0m[[0m[32msuccess[0m] [0m[0mTotal time: 0 s, completed Dec 20, 2018 9:27:24 AM[0m
+[0m[[0m[31merror[0m] [0m[0mNot a valid command: clean-files (similar: load-failed)[0m
+[0m[[0m[31merror[0m] [0m[0mNot a valid project ID: clean-files[0m
+[0m[[0m[31merror[0m] [0m[0mExpected ':'[0m
+[0m[[0m[31merror[0m] [0m[0mNot a valid key: clean-files (similar: cleanFiles, cleanKeepFiles, clean)[0m
+[0m[[0m[31merror[0m] [0m[0mclean-files[0m
+[0m[[0m[31merror[0m] [0m[0m           ^[0m

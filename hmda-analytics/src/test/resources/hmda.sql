@@ -117,7 +117,7 @@ CREATE TABLE public.loanapplicationregister2018
     insert_only_payment integer,
     amortization integer,
     other_amortization integer,
-    proprerty_valeue character varying,
+    property_value character varying,
     home_security_policy integer,
     lan_property_interest integer,
     total_uits integer,

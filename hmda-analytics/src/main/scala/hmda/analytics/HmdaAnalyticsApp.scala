@@ -40,13 +40,13 @@ object HmdaAnalyticsApp
 
   log.info(
     """
-      | _    _ __  __ _____                                 _       _   _          
-      || |  | |  \/  |  __ \   /\         /\               | |     | | (_)         
-      || |__| | \  / | |  | | /  \       /  \   _ __   __ _| |_   _| |_ _  ___ ___ 
+      | _    _ __  __ _____                                 _       _   _
+      || |  | |  \/  |  __ \   /\         /\               | |     | | (_)
+      || |__| | \  / | |  | | /  \       /  \   _ __   __ _| |_   _| |_ _  ___ ___
       ||  __  | |\/| | |  | |/ /\ \     / /\ \ | '_ \ / _` | | | | | __| |/ __/ __|
       || |  | | |  | | |__| / ____ \   / ____ \| | | | (_| | | |_| | |_| | (__\__ \
       ||_|  |_|_|  |_|_____/_/    \_\ /_/    \_\_| |_|\__,_|_|\__, |\__|_|\___|jmo/
-      |                                                        __/ |               
+      |                                                        __/ |
       |                                                       |___/
     """.stripMargin)
 
@@ -62,7 +62,10 @@ object HmdaAnalyticsApp
   val parallelism = config.getInt("hmda.analytics.parallelism")
 
   val transmittalSheetRepository = new TransmittalSheetRepository(dbConfig)
-//  val larRepository = new LarRepository(dbConfig)
+  val larRepository = new LarRepository(schema = "public",
+                                        tableName =
+                                          "loanapplicationregister2018",
+                                        dbConfig)
   val db = transmittalSheetRepository.db
   val larDb = transmittalSheetRepository.db
 
@@ -113,21 +116,21 @@ object HmdaAnalyticsApp
       }
       .runWith(Sink.ignore)
 
-//    readRawData(submissionId)
-//      .map(l => l.data)
-//      .drop(1)
-//      .map(s => LarCsvParser(s))
-//      .map(_.getOrElse(LoanApplicationRegister()))
-//      .filter(lar => lar.larIdentifier.LEI != "" && lar.larIdentifier.id != "")
-//      .map(lar => LarConverter(lar))
-//      .mapAsync(1) { lar =>
-//        println("This is the lar: " + lar)
-//        for {
-//          delete <- larRepository.deleteByLei(lar.lei)
-//          insert <- larRepository.insert(lar)
-//        } yield insert
-//      }
-//      .runWith(Sink.ignore)
+    readRawData(submissionId)
+      .map(l => l.data)
+      .drop(1)
+      .map(s => LarCsvParser(s))
+      .map(_.getOrElse(LoanApplicationRegister()))
+      .filter(lar => lar.larIdentifier.LEI != "" && lar.larIdentifier.id != "")
+      .map(lar => LarConverter(lar))
+      .mapAsync(1) { lar =>
+        println("This is the lar: " + lar)
+        for {
+          _ <- larRepository.deleteByLei(lar.lei)
+          insert <- larRepository.insert(lar)
+        } yield insert
+      }
+      .runWith(Sink.ignore)
 
   }
 }

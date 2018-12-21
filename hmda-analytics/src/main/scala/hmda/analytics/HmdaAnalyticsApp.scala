@@ -107,6 +107,7 @@ object HmdaAnalyticsApp
       .filter(t => t.LEI != "" && t.institutionName != "")
       .map(ts => TransmittalSheetConverter(ts))
       .mapAsync(1) { ts =>
+        println("This is the ts: " + ts)
         for {
           delete <- transmittalSheetRepository.deleteByLei(ts.lei)
           insert <- transmittalSheetRepository.insert(ts)
@@ -117,6 +118,7 @@ object HmdaAnalyticsApp
     val step2: Future[Done] = readRawData(submissionId)
       .map(l => l.data)
       .drop(1)
+      .take(1)
       .map(s => LarCsvParser(s))
       .map(_.getOrElse(LoanApplicationRegister()))
       .filter(lar => lar.larIdentifier.LEI != "" && lar.larIdentifier.id != "")
@@ -124,7 +126,7 @@ object HmdaAnalyticsApp
       .mapAsync(1) { lar =>
         larRepository.deleteByLei(lar.lei)
       }
-      .take(1)
+//      .take(1)
       .runWith(Sink.ignore)
 
     val step3: Future[Done] = readRawData(submissionId)

@@ -98,9 +98,8 @@ object HmdaAnalyticsApp
       .toMat(Sink.ignore)(Keep.right)
       .run()
   }
-
   private def addTs(submissionId: SubmissionId): Future[Done] = {
-    readRawData(submissionId)
+    val step1: Future[Done] = readRawData(submissionId)
       .map(l => l.data)
       .take(1)
       .map(s => TsCsvParser(s))
@@ -108,7 +107,6 @@ object HmdaAnalyticsApp
       .filter(t => t.LEI != "" && t.institutionName != "")
       .map(ts => TransmittalSheetConverter(ts))
       .mapAsync(1) { ts =>
-        println("This is the ts: " + ts)
         for {
           delete <- transmittalSheetRepository.deleteByLei(ts.lei)
           insert <- transmittalSheetRepository.insert(ts)
@@ -116,7 +114,7 @@ object HmdaAnalyticsApp
       }
       .runWith(Sink.ignore)
 
-    readRawData(submissionId)
+    val step2: Future[Done] = readRawData(submissionId)
       .map(l => l.data)
       .drop(1)
       .map(s => LarCsvParser(s))
@@ -124,13 +122,28 @@ object HmdaAnalyticsApp
       .filter(lar => lar.larIdentifier.LEI != "" && lar.larIdentifier.id != "")
       .map(lar => LarConverter(lar))
       .mapAsync(1) { lar =>
-        println("This is the lar: " + lar)
-        for {
-          _ <- larRepository.deleteByLei(lar.lei)
-          insert <- larRepository.insert(lar)
-        } yield insert
+        larRepository.deleteByLei(lar.lei)
+      }
+      .take(1)
+      .runWith(Sink.ignore)
+
+    val step3: Future[Done] = readRawData(submissionId)
+      .map(l => l.data)
+      .drop(1)
+      .map(s => LarCsvParser(s))
+      .map(_.getOrElse(LoanApplicationRegister()))
+      .filter(lar => lar.larIdentifier.LEI != "" && lar.larIdentifier.id != "")
+      .map(lar => LarConverter(lar))
+      .mapAsync(1) { lar =>
+        larRepository.insert(lar)
       }
       .runWith(Sink.ignore)
 
+    for {
+      _ <- step1
+      _ <- step2
+      res <- step3
+    } yield res
   }
+
 }

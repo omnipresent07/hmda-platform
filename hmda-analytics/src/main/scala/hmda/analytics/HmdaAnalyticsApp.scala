@@ -111,6 +111,7 @@ object HmdaAnalyticsApp
           for {
 
             delete <- transmittalSheetRepository.deleteByLei(ts.lei)
+            _ = log.info(s"done deleting ts for $submissionId")
 
           } yield delete
         }
@@ -126,9 +127,10 @@ object HmdaAnalyticsApp
         .mapAsync(1) { ts =>
           for {
 
-            insertorupdate <- transmittalSheetRepository.insert(ts)
+            insert <- transmittalSheetRepository.insert(ts)
+            _ = log.info(s"done inserting ts for $submissionId")
 
-          } yield insertorupdate
+          } yield insert
         }
         .runWith(Sink.ignore)
 
@@ -142,7 +144,10 @@ object HmdaAnalyticsApp
         .filter(lar => lar.larIdentifier.LEI != "")
         .map(lar => LarConverter(lar))
         .mapAsync(1) { lar =>
-          larRepository.deleteByLei(lar.lei)
+          for {
+            deleteLars <- larRepository.deleteByLei(lar.lei)
+            _ = log.info(s"done deleting lars for $submissionId")
+          } yield deleteLars
         }
         .runWith(Sink.ignore)
 
@@ -153,7 +158,11 @@ object HmdaAnalyticsApp
         .map(s => LarCsvParser(s))
         .map(_.getOrElse(LoanApplicationRegister()))
         .filter(lar => lar.larIdentifier.LEI != "")
-        .map(lar => LarConverter(lar))
+        .map {
+          log.info(s"Begin inserting lars for $submissionId")
+          lar =>
+            LarConverter(lar)
+        }
         .mapAsync(1) { lar =>
           larRepository.insert(lar)
         }
@@ -162,11 +171,8 @@ object HmdaAnalyticsApp
     def result =
       for {
         _ <- deleteTsRow
-        _ = log.info(s"Deleting data from TS for  $submissionId")
         _ <- insertTsRow
-        _ = log.info(s"Adding data into TS for  $submissionId")
         _ <- deleteLarRows
-        _ = log.info(s"Done deleting data from LAR for  $submissionId")
         res <- insertLarRows
         _ = log.info(s"Done inserting data into LAR for  $submissionId")
       } yield res

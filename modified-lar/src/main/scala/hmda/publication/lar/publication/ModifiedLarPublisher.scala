@@ -30,7 +30,7 @@ import scala.util.{Failure, Success}
 sealed trait ModifiedLarCommand
 case class PersistToS3AndPostgres(submissionId: SubmissionId,
                                   respondTo: ActorRef[PersistModifiedLarResult])
-  extends ModifiedLarCommand
+    extends ModifiedLarCommand
 sealed trait UploadStatus
 case object UploadSucceeded extends UploadStatus
 case class UploadFailed(exception: Throwable) extends UploadStatus
@@ -43,6 +43,7 @@ object ModifiedLarPublisher {
 
   val config = ConfigFactory.load()
 
+  val filingYear = config.getInt("hmda.filing.year") // resides in common
   val accessKeyId = config.getString("aws.access-key-id")
   val secretAccess = config.getString("aws.secret-access-key ")
   val region = config.getString("aws.region")
@@ -60,8 +61,8 @@ object ModifiedLarPublisher {
   }
 
   def behavior(
-                indexTractMap: Map[String, Census],
-                modifiedLarRepo: ModifiedLarRepository): Behavior[ModifiedLarCommand] =
+      indexTractMap: Map[String, Census],
+      modifiedLarRepo: ModifiedLarRepository): Behavior[ModifiedLarCommand] =
     Behaviors.setup { ctx =>
       val log = ctx.log
       val decider: Supervision.Decider = { e: Throwable =>
@@ -99,7 +100,7 @@ object ModifiedLarPublisher {
             s"$environment/modified-lar/$year/$fileName")
 
           def removeLei: Future[Int] =
-            modifiedLarRepo.deleteByLei(submissionId.lei)
+            modifiedLarRepo.deleteByLei(submissionId.lei, filingYear)
 
           val mlarSource: Source[ModifiedLoanApplicationRegister, NotUsed] =
             readRawData(submissionId)
@@ -108,24 +109,25 @@ object ModifiedLarPublisher {
               .map(s => ModifiedLarCsvParser(s))
 
           val s3Out: Sink[ModifiedLoanApplicationRegister,
-            Future[MultipartUploadResult]] =
+                          Future[MultipartUploadResult]] =
             Flow[ModifiedLoanApplicationRegister]
               .map(mlar => mlar.toCSV + "\n")
               .map(ByteString(_))
               .toMat(s3Sink)(Keep.right)
 
           def postgresOut(parallelism: Int)
-          : Sink[ModifiedLoanApplicationRegister, Future[Done]] =
+            : Sink[ModifiedLoanApplicationRegister, Future[Done]] =
             Flow[ModifiedLoanApplicationRegister]
               .map(
                 mlar =>
                   EnrichedModifiedLoanApplicationRegister(
                     mlar,
                     indexTractMap.getOrElse(mlar.tract, Census())
-                  )
+                )
               )
               .mapAsync(parallelism)(enriched =>
-                modifiedLarRepo.insert(enriched, submissionId.toString))
+                modifiedLarRepo
+                  .insert(enriched, submissionId.toString, filingYear))
               .toMat(Sink.ignore)(Keep.right)
 
           val graph = mlarSource
@@ -150,14 +152,14 @@ object ModifiedLarPublisher {
             case Success(_) =>
               log.info("Successfully completed persisting for {}", submissionId)
               respondTo ! PersistModifiedLarResult(submissionId,
-                UploadSucceeded)
+                                                   UploadSucceeded)
 
             case Failure(exception) =>
               log.error(
                 s"Failed to delete and persist records for $submissionId {}",
                 exception)
               respondTo ! PersistModifiedLarResult(submissionId,
-                UploadFailed(exception))
+                                                   UploadFailed(exception))
               // bubble this up to the supervisor
               throw exception
           }

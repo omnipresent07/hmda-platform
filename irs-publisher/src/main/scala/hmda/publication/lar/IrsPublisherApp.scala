@@ -2,22 +2,22 @@ package hmda.publication.lar
 
 import akka.Done
 import akka.actor.ActorSystem
-import akka.pattern.ask
-import akka.kafka.{ConsumerSettings, Subscriptions}
+import akka.actor.typed.scaladsl.adapter._
 import akka.kafka.scaladsl.Consumer
 import akka.kafka.scaladsl.Consumer.DrainingControl
+import akka.kafka.{ConsumerSettings, Subscriptions}
+import akka.pattern.ask
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{Keep, Sink, Source}
-import org.slf4j.LoggerFactory
-import hmda.publication.KafkaUtils._
-import hmda.messages.pubsub.HmdaTopics._
-import org.apache.kafka.clients.consumer.ConsumerConfig
-import org.apache.kafka.common.serialization.StringDeserializer
-import akka.actor.typed.scaladsl.adapter._
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
+import hmda.messages.pubsub.HmdaTopics._
 import hmda.model.filing.submission.SubmissionId
+import hmda.publication.KafkaUtils._
 import hmda.publication.lar.publication.{IrsPublisher, PublishIrs}
+import org.apache.kafka.clients.consumer.ConsumerConfig
+import org.apache.kafka.common.serialization.StringDeserializer
+import org.slf4j.LoggerFactory
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -46,7 +46,10 @@ object IrsPublisherApp extends App {
 
   val kafkaConfig = system.settings.config.getConfig("akka.kafka.consumer")
   val config = ConfigFactory.load()
-
+  val bankFilter =
+    ConfigFactory.load("application.conf").getConfig("filter")
+  val bankFilterList =
+    bankFilter.getString("bank-filter-list").toUpperCase.split(",")
   val parallelism = config.getInt("hmda.lar.irs.parallelism")
 
   val irsPublisher =
@@ -74,6 +77,9 @@ object IrsPublisherApp extends App {
   def processData(msg: String): Future[Done] = {
     Source
       .single(msg)
+      .filter(msg =>
+        !bankFilterList.exists(bankLEI =>
+          bankLEI.equalsIgnoreCase(SubmissionId(msg).lei)))
       .map { msg =>
         val submissionId = SubmissionId(msg)
         irsPublisher.toUntyped ? PublishIrs(submissionId)

@@ -22,3 +22,5 @@ javaOptions in Universal ++= Seq(
   "-J-XX:+UnlockExperimentalVMOptions",
   "-J-XX:+UseCGroupMemoryLimitForHeap"
 )
+
+javaOptions in reStart ++= (javaOptions in run).value

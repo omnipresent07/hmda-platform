@@ -1,5 +1,7 @@
 package hmda.regulator.query.lar
 
+import hmda.util.conversion.ColumnDataFormatter
+
 case class LarPartOne(id: Int = 0,
                       lei: String = "",
                       uli: String = "",
@@ -23,29 +25,30 @@ case class LarPartOne(id: Int = 0,
   def toPSV: String = {
     s"$id|$lei|$uli|$applicationDate|$loanType|" +
       s"$loanPurpose|$preapproval|$constructionMethod|$occupancyType|" +
-      s"$loanAmount|$actionTakenType|$actionTakenDate|$street|$city|$state|" +
+      BigDecimal.valueOf(loanAmount).bigDecimal.toPlainString +
+      s"|$actionTakenType|$actionTakenDate|$street|$city|$state|" +
       s"$zip|$county|$tract|"
   }
 }
-case class LarPartTwo(ethnicityApplicant1: Int = 0,
-                      ethnicityApplicant2: Int = 0,
-                      ethnicityApplicant3: Int = 0,
-                      ethnicityApplicant4: Int = 0,
-                      ethnicityApplicant5: Int = 0,
+case class LarPartTwo(ethnicityApplicant1: String = "",
+                      ethnicityApplicant2: String = "",
+                      ethnicityApplicant3: String = "",
+                      ethnicityApplicant4: String = "",
+                      ethnicityApplicant5: String = "",
                       otherHispanicApplicant: String = "",
-                      ethnicityCoApplicant1: Int = 0,
-                      ethnicityCoApplicant2: Int = 0,
-                      ethnicityCoApplicant3: Int = 0,
-                      ethnicityCoApplicant4: Int = 0,
-                      ethnicityCoApplicant5: Int = 0,
+                      ethnicityCoApplicant1: String = "",
+                      ethnicityCoApplicant2: String = "",
+                      ethnicityCoApplicant3: String = "",
+                      ethnicityCoApplicant4: String = "",
+                      ethnicityCoApplicant5: String = "",
                       otherHispanicCoApplicant: String = "",
                       ethnicityObservedApplicant: Int = 0,
                       ethnicityObservedCoApplicant: Int = 0,
-                      raceApplicant1: Int = 0,
-                      raceApplicant2: Int = 0,
-                      raceApplicant3: Int = 0,
-                      raceApplicant4: Int = 0,
-                      raceApplicant5: Int = 0) {
+                      raceApplicant1: String = "",
+                      raceApplicant2: String = "",
+                      raceApplicant3: String = "",
+                      raceApplicant4: String = "",
+                      raceApplicant5: String = "") {
 
   def toPSV: String = {
     s"$ethnicityApplicant1|$ethnicityApplicant2|$ethnicityApplicant3|" +
@@ -59,11 +62,11 @@ case class LarPartTwo(ethnicityApplicant1: Int = 0,
 case class LarPartThree(otherNativeRaceApplicant: String = "",
                         otherAsianRaceApplicant: String = "",
                         otherPacificRaceApplicant: String = "",
-                        rateCoApplicant1: Int = 0,
-                        rateCoApplicant2: Int = 0,
-                        rateCoApplicant3: Int = 0,
-                        rateCoApplicant4: Int = 0,
-                        rateCoApplicant5: Int = 0,
+                        raceCoApplicant1: String = "",
+                        raceCoApplicant2: String = "",
+                        raceCoApplicant3: String = "",
+                        raceCoApplicant4: String = "",
+                        raceCoApplicant5: String = "",
                         otherNativeRaceCoApplicant: String = "",
                         otherAsianRaceCoApplicant: String = "",
                         otherPacificRaceCoApplicant: String = "",
@@ -79,8 +82,8 @@ case class LarPartThree(otherNativeRaceApplicant: String = "",
 
   def toPSV: String = {
     s"$otherNativeRaceApplicant|" +
-      s"$otherAsianRaceApplicant|$otherPacificRaceApplicant|$rateCoApplicant1|$rateCoApplicant2|" +
-      s"$rateCoApplicant3|$rateCoApplicant4|$rateCoApplicant5|$otherNativeRaceCoApplicant|" +
+      s"$otherAsianRaceApplicant|$otherPacificRaceApplicant|$raceCoApplicant1|$raceCoApplicant2|" +
+      s"$raceCoApplicant3|$raceCoApplicant4|$raceCoApplicant5|$otherNativeRaceCoApplicant|" +
       s"$otherAsianRaceCoApplicant|$otherPacificRaceCoApplicant|$raceObservedApplicant|" +
       s"$raceObservedCoApplicant|$sexApplicant|$sexCoApplicant|$observedSexApplicant|$observedSexCoApplicant|" +
       s"$ageApplicant|$ageCoApplicant|$income|"
@@ -97,10 +100,10 @@ case class LarPartFour(purchaserType: Int = 0,
                        creditScoreModelApplicant: String = "",
                        creditScoreTypeCoApplicant: Int = 0,
                        creditScoreModelCoApplicant: String = "",
-                       denialReason1: Int = 0,
-                       denialReason2: Int = 0,
-                       denialReason3: Int = 0,
-                       denialReason4: Int = 0,
+                       denialReason1: String = "",
+                       denialReason2: String = "",
+                       denialReason3: String = "",
+                       denialReason4: String = "",
                        otherDenialReason: String = "",
                        totalLoanCosts: String = "",
                        totalPoints: String = "",
@@ -109,8 +112,9 @@ case class LarPartFour(purchaserType: Int = 0,
   def toPSV: String = {
     s"$purchaserType|$rateSpread|$hoepaStatus|$lienStatus|" +
       s"$creditScoreApplicant|$creditScoreCoApplicant|$creditScoreTypeApplicant|$creditScoreModelApplicant|" +
-      s"$creditScoreTypeCoApplicant|$creditScoreModelCoApplicant|$denialReason1|$denialReason2|$denialReason3|" +
-      s"$denialReason4|$otherDenialReason|$totalLoanCosts|$totalPoints|$originationCharges|"
+      s"$creditScoreTypeCoApplicant|$creditScoreModelCoApplicant|" +
+      s"$denialReason1|$denialReason2|$denialReason3|$denialReason4|" +
+      s"$otherDenialReason|$totalLoanCosts|$totalPoints|$originationCharges|"
   }
 }
 
@@ -135,24 +139,26 @@ case class LarPartFive(discountPoints: String = "",
 
   def toPSV: String = {
     s"$discountPoints|$lenderCredits|$interestRate|$paymentPenalty|$debtToIncome|$loanValueRatio|$loanTerm|" +
-      s"$rateSpreadIntro|$baloonPayment|$insertOnlyPayment|$amortization|$otherAmortization|$propertyValue|" +
+      s"$rateSpreadIntro|$baloonPayment|$insertOnlyPayment|$amortization|$otherAmortization|" +
+      ColumnDataFormatter.toBigDecimalString(propertyValue) + "|" +
       s"$homeSecurityPolicy|$landPropertyInterest|$totalUnits|$mfAffordable|$applicationSubmission|"
   }
+
 }
 
 case class LarPartSix(payable: Int = 0,
                       nmls: String = "",
-                      aus1: Int = 0,
-                      aus2: Int = 0,
-                      aus3: Int = 0,
-                      aus4: Int = 0,
-                      aus5: Int = 0,
+                      aus1: String = "",
+                      aus2: String = "",
+                      aus3: String = "",
+                      aus4: String = "",
+                      aus5: String = "",
                       otheraus: String = "",
-                      aus1Result: Int = 0,
-                      aus2Result: Int = 0,
-                      aus3Result: Int = 0,
-                      aus4Result: Int = 0,
-                      aus5Result: Int = 0,
+                      aus1Result: String = "",
+                      aus2Result: String = "",
+                      aus3Result: String = "",
+                      aus4Result: String = "",
+                      aus5Result: String = "",
                       otherAusResult: String = "",
                       reverseMortgage: Int = 0,
                       lineOfCredits: Int = 0,
@@ -178,6 +184,5 @@ case class LarEntityImpl(larPartOne: LarPartOne,
       larPartThree.toPSV +
       larPartFour.toPSV +
       larPartFive.toPSV +
-      larPartSix.toPSV
-
+      larPartSix.toPSV.replaceAll("(\r\n)|\r|\n", "")
 }

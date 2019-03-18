@@ -1,16 +1,15 @@
 package hmda.census.records
 
 import com.typesafe.config.ConfigFactory
-import hmda.model.census.Census
 import hmda.model.ResourceUtils._
+import hmda.model.census.Census
 
 object CensusRecords {
 
-  val config = ConfigFactory.load()
-  val censusFileName =
-    config.getString("hmda.census.fields.filename")
-
   def parseCensusFile: List[Census] = {
+    val config = ConfigFactory.load()
+    val censusFileName =
+      config.getString("hmda.census.fields.filename")
     val lines = fileLines(s"/$censusFileName")
     lines
       .drop(1)
@@ -40,7 +39,9 @@ object CensusRecords {
       .toList
   }
 
-  val (indexedTract, indexedCounty, indexedSmallCounty) =
+  val (indexedTract: Map[String, Census],
+       indexedCounty: Map[String, Census],
+       indexedSmallCounty: Map[String, Census]) =
     parseCensusFile.foldLeft(
       (Map[String, Census](), Map[String, Census](), Map[String, Census]())) {
       case ((m1, m2, m3), c) =>

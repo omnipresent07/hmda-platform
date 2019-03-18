@@ -21,4 +21,7 @@ object Version {
   val alpakkaKafka = "1.0-M1"
   val embeddedKafka = "2.0.0"
   val akkaQuartzScheduler = "1.6.1-akka-2.5.x"
+  val phantom = "2.31.0"
+  val cinnamonMetrics = "2.10.13"
+  val sprayresolver = "0.9.1"
 }

@@ -46,7 +46,6 @@ object SubmissionPersistence
   override def commandHandler(ctx: ActorContext[SubmissionCommand])
     : CommandHandler[SubmissionCommand, SubmissionEvent, SubmissionState] = {
     (state, cmd) =>
-      implicit val system = ctx.asScala.system
       val log = ctx.asScala.log
       val sharding = ClusterSharding(ctx.asScala.system)
       cmd match {
@@ -87,7 +86,8 @@ object SubmissionPersistence
             } else if (modified.end == 0 && modified.receipt.isEmpty) {
               //for all statuses other than signed
               Effect.persist(SubmissionModified(modified)).thenRun { _ =>
-                log.debug(s"persisted modified Submission: ${modified.toString}")
+                log.debug(
+                  s"persisted modified Submission: ${modified.toString}")
                 val filingPersistence = sharding.entityRefFor(
                   FilingPersistence.typeKey,
                   s"${FilingPersistence.name}-${modified.id.lei}-${modified.id.period}")

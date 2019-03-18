@@ -9,7 +9,7 @@ V601|Financial Institution Name, Contact Person's Name, Contact Person's E-mail 
 V602|Calendar Quarter must equal 4, and cannot be left blank.|Calendar Quarter
 V603|The required format for the Contact Person's Telephone Number is 999-999-9999, and it cannot be left blank.|Contact Person's Telephone Number
 V604|Contact Person's Office State must be a two letter state code, and cannot be left blank.|Contact Person's Office State
-V605|The required format for the Contact Person's ZIP Code is 12345-1010 or 12345, and it cannot be left blank.|Contact Person's Office ZIP Code
+V605|The required format for the Contact Person's ZIP Code is 12345-1010 or 12345, and it cannot be left blank.|Contact Person's Office Zip Code
 V606|The required format for the Total Number of Entries Contained in Submission is a whole number that is greater than zero, and it cannot be left blank.|Total Number of Entries Contained in Submission
 V607|The required format for the Federal Taxpayer Identification Number is 99-9999999, and it cannot be left blank.|Federal Taxpayer Identification Number
 S305|A duplicate transaction has been reported. Please review and update your file accordingly.|All data fields in the LAR
@@ -37,7 +37,7 @@ V617|Loan Amount must be a number greater than or equal to 0, and cannot be left
 V618|Action Taken must equal 1, 2, 3, 4, 5, 6, 7, or 8, and cannot be left blank.|Action Taken
 V619-1|Action Taken Date must be a valid date using YYYYMMDD format, and cannot be left blank.|Action Taken Date; Application Date
 V619-2|The Action Taken Date must be in the reporting year.|Action Taken Date; Application Date
-V619-3|If Action Taken equals 1, 2, 3, 4, 5, 7 or 8, then the Action Taken Date must be on or after the Application Date.|Action Taken Date; Application Date
+V619-3|If Action Taken equals 1, 2, 3, 4, 5, 7 or 8, then the Action Taken Date must be on or after the Application Date.|Action Taken; Action Taken Date; Application Date
 V620|Street Address cannot be left blank.|Street Address
 V621|City cannot be left blank.|City
 V622|If Street Address was not reported NA or Exempt, then City, State and Zip Code must be provided, and not reported NA.|Street Address; City; State; Zip Code
@@ -226,7 +226,7 @@ V712|If the Total Loan Costs or Total Points and Fees exemption election is take
 V713|If the Automated Underwriting System exemption election is taken, Automated Underwriting System: 1 and Automated Underwriting System Result: 1 must be reported 1111; and Automated Underwriting System: 2, Automated Underwriting System: 3, Automated Underwriting System: 4, Automated Underwriting System: 5, Automated Underwriting System: Conditional Free Form Text Field for Code 5, Automated Underwriting System Result: 2, Automated Underwriting System Result: 3, Automated Underwriting System Result: 4, Automated Underwriting System Result: 5, and Automated Underwriting System Result: Conditional Free Form Text Field for Code 16 must be left blank.|Automated Underwriting System: 1; Automated Underwriting System: 2; Automated Underwriting System: 3; Automated Underwriting System: 4; Automated Underwriting System: 5; Automated Underwriting System: Conditional Free Form Text Field for Code 5; Automated Underwriting System Result: 1; Automated Underwriting System Result: 2; Automated Underwriting System Result: 3; Automated Underwriting System Result: 4; Automated Underwriting System Result: 5; Automated Underwriting System Result: Conditional Free Form Text Field for Code 16
 V714|If the Application Channel exemption election is taken, Submission of Application and Initially Payable to Your Institution must be reported 1111.|Submission of Application; Initially Payable to Your Institution
 V715|If the Non-Amortizing Features exemption election is taken, Balloon Payment, Interest-Only Payments, Negative Amortization and Other Non-amortizing Features must be reported 1111.|Balloon Payment; Interest-Only Payments; Negative Amortization; Other Non-amortizing Features
-Q600|A duplicate ULI or NULI was reported.|ULI
+Q600|A duplicate ULI or NULI was reported.|Universal Loan Identifier (ULI)
 Q601|Application Date occurs more than two years prior to Action Taken Date.|Application Date; Action Taken Date
 Q602|Street Address was reported NA, however City, State and Zip Code were provided.|Street Address; City; State; Zip Code
 Q603|The County has a population of greater than 30,000 according to the most recent decennial census and was not reported NA; however Census Tract was reported NA.|County; Census Tract

@@ -1,7 +1,6 @@
 package hmda.census
 
 import akka.actor.ActorSystem
-import com.typesafe.config.ConfigFactory
 import hmda.census.api.http.HmdaCensusApi
 import org.slf4j.LoggerFactory
 
@@ -18,6 +17,6 @@ object HmdaCensus extends App {
       |                                         |_|
     """.stripMargin)
 
-  implicit val system = ActorSystem("hmda-census")
+  implicit val system: ActorSystem = ActorSystem("hmda-census")
   system.actorOf(HmdaCensusApi.props(), "hmda-census-api")
 }

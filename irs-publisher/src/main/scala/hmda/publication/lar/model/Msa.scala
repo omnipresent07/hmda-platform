@@ -5,7 +5,6 @@ import hmda.model.filing.lar.enums._
 
 import scala.language.implicitConversions
 import scala.math.BigDecimal.RoundingMode
-import Math._
 
 case class Msa(
     id: String = "",
@@ -62,9 +61,7 @@ case class Msa(
   }
 }
 
-case class MsaMap(
-    msas: Map[String, Msa] = Map[String, Msa]()
-) {
+case class MsaMap(msas: Map[String, Msa] = Map[String, Msa]()) {
   def addLar(lar: LoanApplicationRegister, msa: Msa): MsaMap = {
     val id = msa.id
     val original = msas.getOrElse(id, Msa(msa.id, msa.name))

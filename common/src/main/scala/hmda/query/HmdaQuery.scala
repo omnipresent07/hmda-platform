@@ -2,12 +2,13 @@ package hmda.query
 
 import akka.NotUsed
 import akka.actor.ActorSystem
-import akka.persistence.query.{EventEnvelope, Offset, PersistenceQuery}
 import akka.persistence.query.scaladsl._
+import akka.persistence.query.{EventEnvelope, Offset, PersistenceQuery}
 import akka.stream.scaladsl.Source
 import com.typesafe.config.ConfigFactory
 import hmda.messages.CommonMessages.Event
 import hmda.messages.submission.HmdaRawDataEvents.LineAdded
+import hmda.messages.submission.SubmissionEvents.SubmissionModified
 import hmda.model.filing.submission.SubmissionId
 
 object HmdaQuery {
@@ -50,6 +51,15 @@ object HmdaQuery {
         case evt: LineAdded => evt
       }
 
+  }
+
+  def readSubmission(submissionId: SubmissionId)(
+      implicit system: ActorSystem): Source[SubmissionModified, NotUsed] = {
+    val persistenceId = s"Submission-$submissionId"
+    eventsByPersistenceId(persistenceId)
+      .collect {
+        case evt: SubmissionModified => evt
+      }
   }
 
 }

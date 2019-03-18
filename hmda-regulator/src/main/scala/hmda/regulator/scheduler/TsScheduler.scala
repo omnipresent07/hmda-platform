@@ -17,7 +17,7 @@ import com.typesafe.config.ConfigFactory
 import hmda.actor.HmdaActor
 import hmda.query.DbConfiguration.dbConfig
 import hmda.regulator.query.RegulatorComponent
-import hmda.regulator.query.ts.TransmittalSheetEntity
+import hmda.query.ts.TransmittalSheetEntity
 import hmda.regulator.scheduler.schedules.Schedules.TsScheduler
 
 import scala.concurrent.Future
@@ -29,8 +29,6 @@ class TsScheduler extends HmdaActor with RegulatorComponent {
   implicit val materializer = ActorMaterializer()
   private val fullDate = DateTimeFormatter.ofPattern("yyyy-MM-dd-")
   def tsRepository = new TransmittalSheetRepository(dbConfig)
-
-
 
   override def preStart() = {
     QuartzSchedulerExtension(context.system)
@@ -45,20 +43,19 @@ class TsScheduler extends HmdaActor with RegulatorComponent {
   override def receive: Receive = {
 
     case TsScheduler =>
-
       val awsConfig = ConfigFactory.load("application.conf").getConfig("aws")
-      val bankFilter = ConfigFactory.load("application.conf").getConfig("filter")
-
       val accessKeyId = awsConfig.getString("access-key-id")
       val secretAccess = awsConfig.getString("secret-access-key ")
       val region = awsConfig.getString("region")
       val bucket = awsConfig.getString("public-bucket")
       val environment = awsConfig.getString("environment")
       val year = awsConfig.getString("year")
-      val bankFilterList = bankFilter.getString("bank-filter-list").split(",")
+      val bankFilter =
+        ConfigFactory.load("application.conf").getConfig("filter")
+      val bankFilterList =
+        bankFilter.getString("bank-filter-list").toUpperCase.split(",")
       val awsCredentialsProvider = new AWSStaticCredentialsProvider(
         new BasicAWSCredentials(accessKeyId, secretAccess))
-
 
       val awsRegionProvider = new AwsRegionProvider {
         override def getRegion: String = region

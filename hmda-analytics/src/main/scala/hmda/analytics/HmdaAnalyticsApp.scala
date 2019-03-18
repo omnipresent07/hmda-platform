@@ -7,13 +7,14 @@ import akka.kafka.scaladsl.Consumer
 import akka.kafka.scaladsl.Consumer.DrainingControl
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{Keep, Sink, Source}
-import akka.util.Timeout
+import akka.util.{ByteString, Timeout}
 import com.typesafe.config.ConfigFactory
+import hmda.query.ts.TransmittalSheetConverter
 import hmda.analytics.query.{
   LarComponent,
   LarConverter,
-  TransmittalSheetComponent,
-  TransmittalSheetConverter
+  SubmissionHistoryComponent,
+  TransmittalSheetComponent
 }
 import hmda.messages.pubsub.HmdaTopics.{analyticsTopic, signTopic}
 import hmda.model.filing.lar.LoanApplicationRegister
@@ -26,7 +27,8 @@ import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.slf4j.LoggerFactory
 import hmda.query.DbConfiguration.dbConfig
-import hmda.query.HmdaQuery.readRawData
+import hmda.query.HmdaQuery.{readRawData, readSubmission}
+import hmda.util.streams.FlowUtils.framing
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -34,7 +36,8 @@ import scala.concurrent.duration._
 object HmdaAnalyticsApp
     extends App
     with TransmittalSheetComponent
-    with LarComponent {
+    with LarComponent
+    with SubmissionHistoryComponent {
 
   val log = LoggerFactory.getLogger("hmda")
 
@@ -58,14 +61,17 @@ object HmdaAnalyticsApp
 
   val kafkaConfig = system.settings.config.getConfig("akka.kafka.consumer")
   val config = ConfigFactory.load()
-
+  val bankFilter = config.getConfig("filter")
+  val bankFilterList =
+    bankFilter.getString("bank-filter-list").toUpperCase.split(",")
   val parallelism = config.getInt("hmda.analytics.parallelism")
 
   val transmittalSheetRepository = new TransmittalSheetRepository(dbConfig)
   val larRepository =
     new LarRepository(tableName = "loanapplicationregister2018", dbConfig)
+  val submissionHistoryRepository =
+    new SubmissionHistoryRepository(tableName = "submission_history", dbConfig)
   val db = transmittalSheetRepository.db
-  val larDb = transmittalSheetRepository.db
 
   val consumerSettings: ConsumerSettings[String, String] =
     ConsumerSettings(kafkaConfig,
@@ -79,6 +85,7 @@ object HmdaAnalyticsApp
     .committableSource(consumerSettings,
                        Subscriptions.topics(signTopic, analyticsTopic))
     .mapAsync(parallelism) { msg =>
+      log.info(s"Processing: $msg")
       processData(msg.record.value()).map(_ => msg.committableOffset)
     }
     .mapAsync(parallelism * 2)(offset => offset.commitScaladsl())
@@ -90,7 +97,9 @@ object HmdaAnalyticsApp
     Source
       .single(msg)
       .map(msg => SubmissionId(msg))
-      .map { id =>
+      .filter(id =>
+        !bankFilterList.exists(bankLEI => bankLEI.equalsIgnoreCase(id.lei)))
+      .mapAsync(1) { id =>
         log.info(s"Adding data for  $id")
         addTs(id)
       }
@@ -98,51 +107,131 @@ object HmdaAnalyticsApp
       .run()
   }
   private def addTs(submissionId: SubmissionId): Future[Done] = {
-    val step1: Future[Done] = readRawData(submissionId)
-      .map(l => l.data)
-      .take(1)
-      .map(s => TsCsvParser(s))
-      .map(_.getOrElse(TransmittalSheet()))
-      .filter(t => t.LEI != "" && t.institutionName != "")
-      .map(ts => TransmittalSheetConverter(ts))
-      .mapAsync(1) { ts =>
-        for {
-          delete <- transmittalSheetRepository.deleteByLei(ts.lei)
-          insert <- transmittalSheetRepository.insert(ts)
-        } yield insert
-      }
-      .runWith(Sink.ignore)
+    var submissionIdVar = None: Option[String]
+    submissionIdVar = Some(submissionId.toString)
 
-    val step2: Future[Done] = readRawData(submissionId)
-      .map(l => l.data)
-      .drop(1)
-      .take(1)
-      .map(s => LarCsvParser(s))
-      .map(_.getOrElse(LoanApplicationRegister()))
-      .filter(lar => lar.larIdentifier.LEI != "" && lar.larIdentifier.id != "")
-      .map(lar => LarConverter(lar))
-      .mapAsync(1) { lar =>
-        larRepository.deleteByLei(lar.lei)
-      }
-      .runWith(Sink.ignore)
+    def signDate: Future[Option[Long]] =
+      readSubmission(submissionId)
+        .map(l => l.submission.end)
+        .runWith(Sink.lastOption)
 
-    val step3: Future[Done] = readRawData(submissionId)
-      .map(l => l.data)
-      .drop(1)
-      .map(s => LarCsvParser(s))
-      .map(_.getOrElse(LoanApplicationRegister()))
-      .filter(lar => lar.larIdentifier.LEI != "" && lar.larIdentifier.id != "")
-      .map(lar => LarConverter(lar))
-      .mapAsync(1) { lar =>
-        larRepository.insert(lar)
-      }
-      .runWith(Sink.ignore)
+    def deleteTsRow: Future[Done] =
+      readRawData(submissionId)
+        .map(l => l.data)
+        .take(1)
+        .map(s => TsCsvParser(s))
+        .map(_.getOrElse(TransmittalSheet()))
+        .filter(t => t.LEI != "" && t.institutionName != "")
+        .map(ts => TransmittalSheetConverter(ts, submissionIdVar))
+        .mapAsync(1) { ts =>
+          for {
 
-    for {
-      _ <- step1
-      _ <- step2
-      res <- step3
-    } yield res
+            delete <- transmittalSheetRepository.deleteByLei(ts.lei)
+
+          } yield delete
+        }
+        .runWith(Sink.ignore)
+
+    def insertSubmissionHistory: Future[Done] =
+      readRawData(submissionId)
+        .map(l => l.data)
+        .map(ByteString(_))
+        .via(framing("\n"))
+        .map(_.utf8String)
+        .map(_.trim)
+        .take(1)
+        .map(s => TsCsvParser(s))
+        .map(_.getOrElse(TransmittalSheet()))
+        .filter(t => t.LEI != "" && t.institutionName != "")
+        .map(ts => TransmittalSheetConverter(ts, submissionIdVar))
+        .mapAsync(1) { ts =>
+          for {
+            signdate <- signDate
+            submissionHistory <- submissionHistoryRepository.insert(
+              ts.lei,
+              ts.submissionId,
+              signdate)
+          } yield submissionHistory
+        }
+        .runWith(Sink.ignore)
+
+    def insertTsRow: Future[Done] =
+      readRawData(submissionId)
+        .map(l => l.data)
+        .map(ByteString(_))
+        .via(framing("\n"))
+        .map(_.utf8String)
+        .map(_.trim)
+        .take(1)
+        .map(s => TsCsvParser(s))
+        .map(_.getOrElse(TransmittalSheet()))
+        .filter(t => t.LEI != "" && t.institutionName != "")
+        .map(ts => TransmittalSheetConverter(ts, submissionIdVar))
+        .mapAsync(1) { ts =>
+          for {
+            insertorupdate <- transmittalSheetRepository.insert(ts)
+          } yield insertorupdate
+        }
+        .runWith(Sink.ignore)
+
+    def deleteLarRows: Future[Done] =
+      readRawData(submissionId)
+        .map(l => l.data)
+        .map(ByteString(_))
+        .via(framing("\n"))
+        .map(_.utf8String)
+        .map(_.trim)
+        .drop(1)
+        .take(1)
+        .map(s => LarCsvParser(s))
+        .map(_.getOrElse(LoanApplicationRegister()))
+        .filter(lar => lar.larIdentifier.LEI != "")
+        .map(lar => LarConverter(lar))
+        .mapAsync(1) { lar =>
+          larRepository.deleteByLei(lar.lei)
+        }
+        .runWith(Sink.ignore)
+
+    def insertLarRows: Future[Done] =
+      readRawData(submissionId)
+        .map(l => l.data)
+        .map(ByteString(_))
+        .via(framing("\n"))
+        .map(_.utf8String)
+        .map(_.trim)
+        .drop(1)
+        .map(s => LarCsvParser(s))
+        .map(_.getOrElse(LoanApplicationRegister()))
+        .filter(lar => lar.larIdentifier.LEI != "")
+        .map(lar => LarConverter(lar))
+        .mapAsync(1) { lar =>
+          larRepository.insert(lar)
+        }
+        .runWith(Sink.ignore)
+
+    def result =
+      for {
+        _ <- deleteTsRow
+        _ = log.info(s"Deleting data from TS for  $submissionId")
+
+        _ <- insertTsRow
+        _ = log.info(s"Adding data into TS for  $submissionId")
+
+        _ <- deleteLarRows
+        _ = log.info(s"Done deleting data from LAR for  $submissionId")
+
+        _ <- insertLarRows
+        _ = log.info(s"Done inserting data into LAR for  $submissionId")
+
+        _ <- signDate
+        res <- insertSubmissionHistory
+      } yield res
+    result.recover {
+      case t: Throwable =>
+        log.error("Error happened in inserting: ", t)
+        throw t
+    }
+
   }
 
 }

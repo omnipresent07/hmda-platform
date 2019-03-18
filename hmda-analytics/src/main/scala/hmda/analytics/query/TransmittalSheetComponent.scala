@@ -4,8 +4,8 @@ import hmda.query.DbConfiguration._
 import hmda.query.repository.TableRepository
 import slick.basic.DatabaseConfig
 import slick.jdbc.JdbcProfile
-
 import scala.concurrent.Future
+import hmda.query.ts._
 
 trait TransmittalSheetComponent {
 
@@ -29,6 +29,7 @@ trait TransmittalSheetComponent {
     def agency = column[Int]("agency")
     def totalLines = column[Int]("total_lines")
     def taxId = column[String]("tax_id")
+    def submissionId = column[Option[String]]("submission_id")
 
     override def * =
       (
@@ -46,7 +47,8 @@ trait TransmittalSheetComponent {
         zipCode,
         agency,
         totalLines,
-        taxId
+        taxId,
+        submissionId
       ) <> (TransmittalSheetEntity.tupled, TransmittalSheetEntity.unapply)
   }
 
@@ -69,11 +71,15 @@ trait TransmittalSheetComponent {
     }
 
     def findByLei(lei: String): Future[Seq[TransmittalSheetEntity]] = {
-      db.run(table.filter(_.lei === lei).result)
+      db.run(table.filter(_.lei.toUpperCase === lei.toUpperCase).result)
     }
 
     def deleteByLei(lei: String): Future[Int] = {
-      db.run(table.filter(_.lei === lei).delete)
+      db.run(table.filter(_.lei.toUpperCase === lei.toUpperCase).delete)
+    }
+
+    def updateByLei(ts: TransmittalSheetEntity): Future[Int] = {
+      db.run(table.insertOrUpdate(ts))
     }
 
     def count(): Future[Int] = {

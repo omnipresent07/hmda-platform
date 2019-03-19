@@ -20,6 +20,7 @@ import hmda.model.institution.{
   MsaMdResponse
 }
 import hmda.query.repository.ModifiedLarRepository
+import hmda.query.ts.TransmittalSheetEntity
 import hmda.reporting.repository.TsComponent
 import hmda.util.http.FilingResponseUtils.entityNotPresentResponse
 import io.circe.generic.auto._
@@ -37,20 +38,18 @@ trait ReportingHttpApi extends TsComponent {
   val tsRepository: TransmittalSheetRepository
 
   val filerListRoute: Route = {
-    path("filers" / Segment) { year =>
+    path("filers" / IntNumber) { filingYear =>
       get {
 
         val futFilerSet =
           tsRepository
-            .getAllSheets()
-            .map(
-              sheets =>
-                sheets
-                  .map(tsEntity =>
-                    HmdaFiler(tsEntity.lei,
-                              tsEntity.institutionName,
-                              tsEntity.year.toString))
-                  .toSet)
+            .getAllSheets(filingYear)
+            .map(sheets =>
+              sheets.map { tsEntity: TransmittalSheetEntity =>
+                HmdaFiler(tsEntity.lei,
+                          tsEntity.institutionName,
+                          tsEntity.year.toString)
+              }.toSet)
         onComplete(futFilerSet) {
           case Success(filerSet) =>
             complete(HmdaFilerResponse(filerSet))

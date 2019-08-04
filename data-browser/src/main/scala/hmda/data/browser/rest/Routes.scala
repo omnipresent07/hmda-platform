@@ -82,15 +82,19 @@ object Routes {
           } ~
             // GET /view/nationwide/aggregations
             (path(Aggregations) & get) {
-              extractFieldsForAggregation { queryFields =>
-                val allFields = queryFields
-                log.info("Nationwide [Aggregations]: " + allFields)
-                complete(browserService
-                  .fetchAggregate(allFields)
-                  .map(aggs =>
-                    AggregationResponse(Parameters.fromBrowserFields(allFields),
-                                        aggs))
-                  .runToFuture)
+              extractNationwideMandatoryYears { mandatoryFields =>
+                extractFieldsForAggregation { queryFields =>
+                  val allFields = mandatoryFields ++ queryFields
+                  log.info("Nationwide [Aggregations]: " + allFields)
+                  complete(
+                    browserService
+                      .fetchAggregate(allFields)
+                      .map(aggs =>
+                        AggregationResponse(
+                          Parameters.fromBrowserFields(allFields),
+                          aggs))
+                      .runToFuture)
+                }
               }
             }
         } ~

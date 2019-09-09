@@ -114,7 +114,7 @@ object DisclosureReports {
       .run()
 
     val processComplete = Source
-      .tick(initialDelay = 26.minutes, interval = 26.minutes, drainingControl)
+      .tick(initialDelay = 260.minutes, interval = 260.minutes, drainingControl)
       .mapAsync(1) { drainingControl =>
         drainingControl.shutdown()
       }

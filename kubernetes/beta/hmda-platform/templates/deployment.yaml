@@ -22,17 +22,6 @@ spec:
         release: {{ .Release.Name }}
         actorSystemName: {{ .Values.hmda.actorSystemName }}
     spec:
-      affinity:
-        podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-          - labelSelector:
-              matchExpressions:
-              - key: app
-                operator: In
-                values:
-                - "hmda-platform"
-                - "keycloak"
-            topologyKey: kubernetes.io/hostname
       volumes:
         - name: tz-config
           hostPath:
@@ -47,10 +36,10 @@ spec:
         resources:
           limits:
             memory: "4200Mi"
-            cpu: "4"
+            cpu: "0.5"
           requests:
             memory: "4200Mi"
-            cpu: "2"
+            cpu: "0.5"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         env:
         - name: KAFKA_INSTITUTIONS_TOPIC

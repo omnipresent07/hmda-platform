@@ -1,25 +1,27 @@
 package hmda.publication.lar.streams
 
 import akka.actor.ActorSystem
-import akka.kafka.ConsumerMessage.{ CommittableMessage, CommittableOffset }
+import akka.kafka.ConsumerMessage.{CommittableMessage, CommittableOffset}
 import akka.kafka.scaladsl._
-import akka.kafka.{ CommitterSettings, ConsumerSettings, Subscriptions }
+import akka.kafka.{CommitterSettings, ConsumerSettings, Subscriptions}
 import akka.stream.scaladsl._
-import akka.{ Done, NotUsed }
+import akka.{Done, NotUsed}
 import cats.implicits._
-import hmda.messages.pubsub.{ HmdaGroups, HmdaTopics }
+import hmda.messages.pubsub.{HmdaGroups, HmdaTopics}
 import hmda.model.filing.submission.SubmissionId
-import hmda.publication.lar.database.{ EmailSubmissionMetadata, EmailSubmissionStatusRepository => SubmissionStatusRepo }
-import hmda.publication.lar.email.{ Email, EmailService }
+import hmda.publication.lar.database.{EmailSubmissionMetadata, EmailSubmissionStatusRepository => SubmissionStatusRepo}
+import hmda.publication.lar.email.{Email, EmailService}
 import monix.eval.Task
 import monix.execution.Scheduler
-import org.apache.kafka.clients.consumer.{ ConsumerConfig, ConsumerRecord }
+import org.apache.kafka.clients.consumer.{ConsumerConfig, ConsumerRecord}
 import org.apache.kafka.common.serialization.StringDeserializer
+import org.slf4j.LoggerFactory
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
 
 object Stream {
+  val log = LoggerFactory.getLogger("hmda")
   def pullEmails(system: ActorSystem, bootstrapServers: String): SourceWithContext[
     CommittableMessage[String, String],
     CommittableOffset,
@@ -63,6 +65,8 @@ object Stream {
     val rawSubmissionId = record.key()
     val toAddress       = record.value()
     val sId             = submissionId(rawSubmissionId)
+
+    log.info(s"Working on ${rawSubmissionId} and ${toAddress}")
 
     val process = for {
       optPresent <- submissionStatusRepo.findBySubmissionId(sId)

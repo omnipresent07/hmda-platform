@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: email-configmap
+data:
+  emailSubject: "Some subject"
+  emailContent: "Some Content"
+  emailSender: "noreply@cfpb.gov"

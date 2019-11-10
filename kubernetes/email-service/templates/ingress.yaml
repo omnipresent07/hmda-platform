@@ -1,13 +1,13 @@
 {{- if .Values.ingress.enabled -}}
-{{- $fullName := include "modified-lar.fullname" . -}}
+{{- $fullName := include "email-service.fullname" . -}}
 {{- $ingressPath := .Values.ingress.path -}}
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
   name: {{ $fullName }}
   labels:
-    app: {{ include "modified-lar.name" . }}
-    chart: {{ include "modified-lar.chart" . }}
+    app: {{ include "email-service.name" . }}
+    chart: {{ include "email-service.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
 {{- with .Values.ingress.annotations }}

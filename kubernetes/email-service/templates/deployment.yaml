@@ -1,24 +1,24 @@
 apiVersion: apps/v1beta2
 kind: Deployment
 metadata:
-  name: {{ include "modified-lar.fullname" . }}
+  name: {{ include "email-service.fullname" . }}
   annotations:
     downscaler/uptime: Mon-Fri 10:00-23:00 UTC
   labels:
-    app: {{ include "modified-lar.name" . }}
-    chart: {{ include "modified-lar.chart" . }}
+    app: {{ include "email-service.name" . }}
+    chart: {{ include "email-service.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app: {{ include "modified-lar.name" . }}
+      app: {{ include "email-service.name" . }}
       release: {{ .Release.Name }}
   template:
     metadata:
       labels:
-        app: {{ include "modified-lar.name" . }}
+        app: {{ include "email-service.name" . }}
         release: {{ .Release.Name }}
     spec:
       volumes:
@@ -37,61 +37,11 @@ spec:
               cpu: "4"
               memory: "2200Mi"
           env:
-            - name: PG_HOST
-              valueFrom:
-                secretKeyRef:
-                  name: inst-postgres-credentials
-                  key: host
-            - name: PG_DATABASE
-              valueFrom:
-                configMapKeyRef:
-                  name: postgresql-configmap
-                  key: postgres.database
-            - name: PG_USER
-              valueFrom:
-                secretKeyRef:
-                  name: inst-postgres-credentials
-                  key: username
-            - name: PG_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: inst-postgres-credentials
-                  key: password
-            - name: PG_SSL
-              valueFrom:
-                configMapKeyRef:
-                  name: postgresql-configmap
-                  key: postgres.ssl
             - name: JDBC_URL
               valueFrom:
                 secretKeyRef:
                   name: inst-postgres-credentials
                   key: url
-            - name: CASSANDRA_CLUSTER_HOSTS
-              valueFrom:
-                configMapKeyRef:
-                  name: cassandra-configmap
-                  key: cassandra-hosts
-            - name: CASSANDRA_CLUSTER_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: cassandra-credentials
-                  key: cassandra.username
-            - name: CASSANDRA_JOURNAL_KEYSPACE
-              valueFrom:
-                configMapKeyRef:
-                  name: cassandra-configmap
-                  key: cassandra-keyspace
-            - name: CASSANDRA_SNAPSHOT_KEYSPACE
-              valueFrom:
-                configMapKeyRef:
-                  name: cassandra-configmap
-                  key: cassandra-keyspace-snapshot
-            - name: CASSANDRA_CLUSTER_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: cassandra-credentials
-                  key: cassandra.password
             - name: KAFKA_CLUSTER_HOSTS
               valueFrom:
                 configMapKeyRef:
@@ -100,12 +50,12 @@ spec:
             - name: AWS_ACCESS_KEY_ID
               valueFrom:
                 secretKeyRef:
-                  name: aws-credentials
+                  name: aws-email-credentials
                   key: aws-access-key-id
             - name: AWS_SECRET_ACCESS_KEY
               valueFrom:
                 secretKeyRef:
-                  name: aws-credentials
+                  name: aws-email-credentials
                   key: aws-secret-access-key
             - name: AWS_ENVIRONMENT
               valueFrom:
@@ -117,34 +67,32 @@ spec:
                 configMapKeyRef:
                   name: bank-filter-configmap
                   key: bank-filter-list
-            - name: HTTP_CENSUS_HOST
-              valueFrom:
-                configMapKeyRef:
-                  name: http-configmap
-                  key: census.host
             - name: HTTP_CENSUS_PORT
               valueFrom:
                 configMapKeyRef:
                   name: http-configmap
                   key: census.port
-            - name: KAFKA_LOG_LEVEL
+            - name: EMAIL_LOG_LEVEL
               value: INFO
-            - name: KAFKA_MODIFIED_LAR_TOPIC
-              value: {{.Values.kafka.modifiedLarTopic}}
-            - name: KAFKA_SIGN_TOPIC
-              value: {{.Values.kafka.signTopic}}
-            - name: KAFKA_MODIFIED_LAR_GROUP
-              value: {{.Values.kafka.modifiedLarGroup}}
-            - name: IS_GENERATE_MLAR_S3_FIES
+            - name: KAFKA_EMAIL_TOPIC
+              value: {{.Values.kafka.emailTopic}}
+            - name: KAFKA_EMAIL_CONSUMER_GROUP_ID
+              value: {{.Values.kafka.emailGroup}}
+            - name: EMAIL_SUBJECT
               valueFrom:
                 configMapKeyRef:
-                  name: mlar-options-configmap
-                  key: generateMlarS3File
-            - name: IS_CREATE_DISPOSITION_KAFKA_RECORD
+                  name: email-configmap
+                  key: emailSubject
+            - name: EMAIL_CONTENT
               valueFrom:
                 configMapKeyRef:
-                  name: mlar-options-configmap
-                  key: createDispositionKafkaRecord
+                  name: email-configmap
+                  key: emailContent
+            - name: SENDER_EMAIL_ADDRESS
+              valueFrom:
+                configMapKeyRef:
+                  name: email-configmap
+                  key: emailSender
           resources:
 {{ toYaml .Values.resources | indent 12 }}
     {{- with .Values.nodeSelector }}

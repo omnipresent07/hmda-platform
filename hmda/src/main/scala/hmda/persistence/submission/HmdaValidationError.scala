@@ -302,7 +302,9 @@ object HmdaValidationError
                 Signed,
                 log
               )
-              publishSignEvent(submissionId, email).map(signed => log.info(s"Published signed event for $submissionId"))
+              publishSignEvent(submissionId, email).map(signed => log.info(s"Published signed event for $submissionId. " +
+                s"${signTopic} (key: ${submissionId.lei}, value: ${submissionId.toString}. " +
+                s"${emailTopic} (key: ${submissionId.toString}, value: ${email})"))
               setHmdaFilerFlag(submissionId.lei, submissionId.period, sharding)
               replyTo ! signed
             }
@@ -689,6 +691,7 @@ object HmdaValidationError
     submissionId: SubmissionId,
     email: String
   )(implicit system: ActorSystem, materializer: ActorMaterializer): Future[Done] = {
+    log.info(s"Producing ${topic} with key = ${key} and value = ${value}")
     produceRecord(signTopic, submissionId.lei, submissionId.toString)
     produceRecord(emailTopic, submissionId.toString, email)
   }

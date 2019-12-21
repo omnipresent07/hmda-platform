@@ -9,7 +9,11 @@ import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{FileIO, Flow, Sink, Source}
 import akka.util.ByteString
 import hmda.messages.submission.HmdaRawDataEvents.LineAdded
-import hmda.messages.submission.SubmissionProcessingCommands.StartParsing
+import hmda.messages.submission.SubmissionProcessingCommands.{
+  PersistHmdaRowParsedError,
+  StartParsing
+}
+import hmda.messages.submission.SubmissionProcessingEvents.HmdaRowParsedError
 import hmda.model.filing.lar.LoanApplicationRegister
 import hmda.parser.filing.lar.LarCsvParser
 import hmda.query.HmdaQuery.eventsByPersistenceId
@@ -26,30 +30,31 @@ object IrsDebug extends App {
 //  val persistenceId = s"HmdaRawData-2549006DVF3CPHSCHN79-2018-7"
 //  val persistenceId = s"HmdaRawData-549300XR0EY1M0FVG232-2018-1"
 //  val persistenceId = s"HmdaRawData-549300ZIQ24V0C88AC41-2018-3"
-  val persistenceId = s"HmdaRawData-549300KNV94E4Y2HSK54-2019-1"
-  val source: Source[LineAdded, NotUsed] = eventsByPersistenceId(persistenceId)
-    .collect {
-      case evt: LineAdded => evt
-    }
-
-//  val source: Source[StartParsing, NotUsed] = eventsByPersistenceId(persistenceId)
+  val persistenceId = s"HmdaParserError-549300KNV94E4Y2HSK54-2019-1"
+//  val source: Source[LineAdded, NotUsed] = eventsByPersistenceId(persistenceId)
 //    .collect {
-//      case evt: StartParsing => evt
+//      case evt: LineAdded => evt
 //    }
+
+  val source: Source[HmdaRowParsedError, NotUsed] =
+    eventsByPersistenceId(persistenceId)
+      .collect {
+        case evt: HmdaRowParsedError => evt
+      }
   val file = Paths.get("549300KNV94E4Y2HSK54.txt")
   source
 //    .drop(1)
-    .map(l => l.data)
-    .map(ByteString(_))
-    .via(framing("\n"))
-    .map(_.utf8String)
-    .map(_.trim)
+//    .map(l => l.data)
+//    .map(ByteString(_))
+//    .via(framing("\n"))
+//    .map(_.utf8String)
+//    .map(_.trim)
 //    .map(s => LarCsvParser(s).getOrElse(LoanApplicationRegister()))
 //    .filter(_.loan.ULI == "549300HW662MN1WU8550151803611008")
-//    .runWith(Sink.foreach(println))
-    .map(t => ByteString(t))
-    .via(framing("\n"))
-    .runWith(FileIO.toPath(file))
+    .runWith(Sink.foreach(println))
+//    .map(t => ByteString(t))
+//    .via(framing("\n"))
+//    .runWith(FileIO.toPath(file))
 //    .runWith(Sink.foreach(println))
 //    .onComplete(_ => system.terminate())(
 //      scala.concurrent.ExecutionContext.global)

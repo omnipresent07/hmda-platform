@@ -6,27 +6,24 @@ import akka.actor.typed.scaladsl.adapter._
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.stream._
 import akka.stream.alpakka.s3.ApiVersion.ListBucketVersion2
-import akka.stream.alpakka.s3.scaladsl.S3
 import akka.stream.alpakka.s3._
+import akka.stream.alpakka.s3.scaladsl.S3
 import akka.stream.scaladsl._
 import akka.util.ByteString
 import akka.{Done, NotUsed}
 import com.amazonaws.auth.{AWSStaticCredentialsProvider, BasicAWSCredentials}
 import com.amazonaws.regions.AwsRegionProvider
 import com.typesafe.config.ConfigFactory
+import hmda.messages.pubsub.HmdaTopics._
 import hmda.model.census.Census
 import hmda.model.filing.submission.SubmissionId
 import hmda.model.modifiedlar.{EnrichedModifiedLoanApplicationRegister, ModifiedLoanApplicationRegister}
-import hmda.model.modifiedlar.{
-  EnrichedModifiedLoanApplicationRegister,
-  ModifiedLoanApplicationRegister
-}
+import hmda.publication.KafkaUtils
+import hmda.publication.KafkaUtils._
 import hmda.publication.lar.parser.ModifiedLarCsvParser
 import hmda.query.HmdaQuery._
 import hmda.query.repository.ModifiedLarRepository
-import hmda.publication.KafkaUtils._
-import hmda.messages.pubsub.HmdaTopics._
-import hmda.publication.KafkaUtils
+
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
@@ -107,11 +104,17 @@ object ModifiedLarPublisher {
                              metaHeaders = MetaHeaders(metaHeaders))
             .withAttributes(S3Attributes.settings(s3Settings))
 
-          val s3SinkHeaders = S3
+          val s3SinkWithHeader = S3
             .multipartUpload(bucket,
               s"$environment/modified-lar/$filingPeriod/$fileNameHeader",
               metaHeaders = MetaHeaders(metaHeaders))
             .withAttributes(S3Attributes.settings(s3Settings))
+
+          val serializeMlar = {
+            Flow[ModifiedLoanApplicationRegister]
+              .map(mlar => mlar.toCSV + "\n")
+              .map(ByteString(_))
+          }
 
           def removeLei: Future[Int] =
             modifiedLarRepo.deleteByLei(submissionId)
@@ -122,16 +125,16 @@ object ModifiedLarPublisher {
               .drop(1)
               .map(s => ModifiedLarCsvParser(s))
 
-          val s3Out: Sink[ModifiedLoanApplicationRegister, Future[List[MultipartUploadResult]]] = {
-                Flow[ModifiedLoanApplicationRegister]
-                  .map(mlar => mlar.toCSV + "\n")
-                  .map(ByteString(_))
-                  .alsoToMat(s3SinkHeaders)(Keep.right)
-                  .toMat(s3Sink)(Keep.both)
-                  .mapMaterializedValue { case (fileWithHeaderResult, fileResult) =>
-                    Future.sequence(List(fileWithHeaderResult, fileResult))
-                  }
-            }
+//          val s3Out: Sink[ModifiedLoanApplicationRegister, Future[List[MultipartUploadResult]]] = {
+//                Flow[ModifiedLoanApplicationRegister]
+//                  .map(mlar => mlar.toCSV + "\n")
+//                  .map(ByteString(_))
+//                  .alsoToMat(s3SinkHeaders)(Keep.right)
+//                  .toMat(s3Sink)(Keep.both)
+//                  .mapMaterializedValue { case (fileWithHeaderResult, fileResult) =>
+//                    Future.sequence(List(fileWithHeaderResult, fileResult))
+//                  }
+//            }
 
           def postgresOut(parallelism: Int)
             : Sink[ModifiedLoanApplicationRegister, Future[Done]] =
@@ -150,24 +153,36 @@ object ModifiedLarPublisher {
                   .insert(enriched, submissionId))
               .toMat(Sink.ignore)(Keep.right)
 
-          //generate S3 files and write to PG
-          val graphWithS3 = mlarSource
-            .alsoToMat(postgresOut(2))(Keep.right)
-            .toMat(s3Out)(Keep.both)
-            .mapMaterializedValue {
-              // We listen on the completion of both materialized values but we only keep the S3 as the result
-              // since that is a meaningful value
-              case (futPostgresRes, futS3Res) =>
-                for {
-                  _ <- futPostgresRes
-                  s3Res <- if (isGenerateS3File) futS3Res
-                  else Future.successful(Nil)
-                } yield s3Res
-            }
+          def mlarGraph(s3Enabled: Boolean): RunnableGraph[Future[Done]] =
+            RunnableGraph.fromGraph(
+              GraphDSL.create(mlarSource, s3SinkWithHeader, s3Sink, postgresOut(2))(
+                (_, s3HeaderMat, s3NoHeaderMat, pgMat) =>
+                  for {
+                    _ <- s3HeaderMat
+                    _ <- s3NoHeaderMat
+                    _ <- pgMat
+                  } yield akka.Done.done()
+              ) { implicit builder => (source, headerSink, noHeaderSink, pgSink) =>
+                import GraphDSL.Implicits._
+                val mlarHeader = Source.single(ByteString(ModifiedLoanApplicationRegister.header))
+
+                if (s3Enabled) {
+                  (source ~> serializeMlar).prepend(mlarHeader) ~> headerSink
+                  source ~> serializeMlar ~> noHeaderSink
+                } else ()
+
+                source ~> pgSink
+
+                ClosedShape
+              }
+            )
+
+
+          // write to both Postgres and S3
+          val graphWithS3 = mlarGraph(s3Enabled = true)
 
           //only write to PG - do not generate S3 files
-          val graphWithoutS3 = mlarSource
-            .toMat(postgresOut(2))(Keep.right)
+          val graphWithoutS3 = mlarGraph(s3Enabled = false)
 
           val finalResult: Future[Unit] = for {
             _ <- removeLei

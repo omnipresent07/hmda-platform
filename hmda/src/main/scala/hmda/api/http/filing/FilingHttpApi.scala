@@ -62,15 +62,17 @@ private class FilingHttpApi(log: Logger, sharding: ClusterSharding)(implicit val
           }
         }
       } ~ path("institutions" / Segment / "filings" / IntNumber / "quarter" / Quarter) { (lei, period, quarter) =>
+        println ("Enteed here 1!")
         oAuth2Authorization.authorizeTokenWithLei(lei) { _ =>
           pathEndOrSingleSlash {
             quarterlyFiler(lei, period) {
               // POST/institutions/<lei>/filings/<year>/quarters/<quarter>
-              extractUri { uri =>
+              (post & extractUri) { uri =>
                 createFilingForInstitution(lei, period, Option(quarter), uri)
               } ~
                 // GET /institutions/<lei>/filings/<year>/quarters/<quarter>
-                extractUri { uri =>
+                (get & extractUri) { uri =>
+                  println ("Entered here 22")
                   parameter('page.as[Int] ? 1)(pageNumber => getFilingForInstitution(lei, period, Option(quarter), uri, pageNumber))
                 }
             }
@@ -97,7 +99,9 @@ private class FilingHttpApi(log: Logger, sharding: ClusterSharding)(implicit val
   }
 
   def createFilingForInstitution(lei: String, year: Int, quarter: Option[String], uri: Uri): Route =
+
     isFilingAllowed(year, quarter) {
+      println ("entered in create filing")
       onComplete(obtainFilingDetails(lei, year, quarter)) {
         case Failure(error) =>
           log.error(s"Unable to obtain filing details for an institution for (lei: $lei, year: $year, quarter: $quarter)", error)
@@ -139,7 +143,7 @@ private class FilingHttpApi(log: Logger, sharding: ClusterSharding)(implicit val
     onComplete(obtainFilingDetails(lei, period, quarter)) {
       case Success((Some(_), Some(filingDetails))) =>
 
-        // get all filings 
+        // get all filings
         if (pageNumber == 0)
           complete(filingDetails)
         else {

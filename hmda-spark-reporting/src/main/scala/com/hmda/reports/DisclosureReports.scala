@@ -100,7 +100,7 @@ object DisclosureReports {
                                                      lookupMap = lookupMap,
                                                      jdbcUrl = JDBC_URL,
                                                      bucket = AWS_BUCKET,
-                                                     year = "2018"))
+                                                     year = "2019"))
           .map(_ => msg.committableOffset)
       }
       .async

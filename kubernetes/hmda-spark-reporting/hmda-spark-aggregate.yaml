@@ -6,12 +6,7 @@ metadata:
 spec:
   type: Scala
   mode: cluster
-  sparkConf:
-    "spark.streaming.receiver.maxRate": "1"
-    "spark.streaming.receiver.maxRate": "1"
-    "spark.streaming.backpressure.initialRate": "1"
-    "spark.streaming.backpressure.enabled": "true"
-  image: "hmda/hmda-spark-reporting"
+  image: "hmda/hmda-spark-reporting:2019-a_and_d_just_last"
   imagePullPolicy: Always
   mainClass: com.hmda.reports.AggregateReports
   mainApplicationFile: "local:///opt/spark/cfpb/hmda/jars/hmda-spark-reporting.jar"
@@ -26,7 +21,7 @@ spec:
   driver:
     cores: 1
     coreLimit: "4000m"
-    memory: "4g"
+    memory: "6g"
     javaOptions: "-XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap"
     labels:
       version: 2.4.0
@@ -56,7 +51,7 @@ spec:
   executor:
     cores: 2
     instances: 2
-    memory: "8g"
+    memory: "16g"
     javaOptions: "-XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap"
     labels:
       version: 2.4.0

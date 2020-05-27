@@ -221,7 +221,7 @@ object DisclosureProcessing {
 
     val result = for {
       _ <- persistJson(disclosuresTable1)
-      _ <- persistJson2(disclosuresTable2)
+//      _ <- persistJson2(disclosuresTable2)
     } yield ()
 
     result.onComplete {

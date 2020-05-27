@@ -87,7 +87,7 @@ object DisclosureReports {
                        new StringDeserializer,
                        new StringDeserializer)
         .withBootstrapServers(sys.env("KAFKA_HOSTS"))
-        .withGroupId(HmdaTopics.disclosureTopic)
+        .withGroupId("hmda-spark-disclosure-2019")
         .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
 
     val drainingControl: DrainingControl[Done] = Consumer

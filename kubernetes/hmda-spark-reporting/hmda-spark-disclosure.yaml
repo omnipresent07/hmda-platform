@@ -6,7 +6,7 @@ metadata:
 spec:
   type: Scala
   mode: cluster
-  image: "hmda/hmda-spark-reporting:2019-a_and_d_just_last"
+  image: "hmda/hmda-spark-reporting:2019-d_1"
   imagePullPolicy: Always
   mainClass: com.hmda.reports.DisclosureReports
   mainApplicationFile: "local:///opt/spark/cfpb/hmda/jars/hmda-spark-reporting.jar"
@@ -19,9 +19,9 @@ spec:
 #        path: "/tmp"
 #        type: Directory
   driver:
-    cores: 2
+    cores: 1
     coreLimit: "4000m"
-    memory: "8g"
+    memory: "16g"
     labels:
       version: 2.4.0
 #    affinity:
@@ -61,7 +61,7 @@ spec:
   executor:
     cores: 2
     instances: 2
-    memory: "8g"
+    memory: "16g"
     labels:
       version: 2.4.0
 #    affinity:

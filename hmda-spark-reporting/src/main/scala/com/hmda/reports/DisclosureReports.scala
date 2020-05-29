@@ -14,8 +14,8 @@ import akka.util.Timeout
 import com.amazonaws.auth.{AWSStaticCredentialsProvider, BasicAWSCredentials}
 import com.amazonaws.regions.AwsRegionProvider
 import com.hmda.reports.model.StateMapping
-import com.hmda.reports.processing.DisclosureProcessing
-import com.hmda.reports.processing.DisclosureProcessing.ProcessDisclosureKafkaRecord
+import com.hmda.reports.processing.DisclosureProcessingSupervisor
+import com.hmda.reports.processing.DisclosureProcessingWorker.ProcessDisclosureKafkaRecord
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.apache.spark.sql.SparkSession
@@ -25,6 +25,7 @@ import hmda.messages.pubsub.HmdaTopics
 
 import scala.concurrent.duration._
 import scala.concurrent._
+import scala.util.{Failure, Success}
 
 object DisclosureReports {
 
@@ -79,48 +80,50 @@ object DisclosureReports {
     }
 
     val processorRef = system.actorOf(
-      DisclosureProcessing.props(spark, s3Settings),
+      DisclosureProcessingSupervisor.props(spark, s3Settings),
       "complex-json-processor")
 
     val consumerSettings: ConsumerSettings[String, String] =
       ConsumerSettings(system.settings.config.getConfig("akka.kafka.consumer"),
-                       new StringDeserializer,
-                       new StringDeserializer)
+        new StringDeserializer,
+        new StringDeserializer)
         .withBootstrapServers(sys.env("KAFKA_HOSTS"))
         .withGroupId("hmda-spark-disclosure-2019")
         .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
 
-    val drainingControl: DrainingControl[Done] = Consumer
+
+
+    val (drainingControl, streamCompleted) = Consumer
       .committableSource(consumerSettings,
-                         Subscriptions.topics(HmdaTopics.disclosureTopic))
+        Subscriptions.topics(HmdaTopics.disclosureTopic))
       // async boundary begin
       .async
       .mapAsync(1) { msg =>
         (processorRef ? ProcessDisclosureKafkaRecord(lei = msg.record.key,
-                                                     lookupMap = lookupMap,
-                                                     jdbcUrl = JDBC_URL,
-                                                     bucket = AWS_BUCKET,
-                                                     year = "2019"))
+          lookupMap = lookupMap,
+          jdbcUrl = JDBC_URL,
+          bucket = AWS_BUCKET,
+          year = "2019"))
           .map(_ => msg.committableOffset)
       }
       .async
       // async boundary end
       .mapAsync(1)(offset => offset.commitScaladsl())
       .toMat(Sink.ignore)(Keep.both)
-      .mapMaterializedValue(DrainingControl.apply)
       .run()
 
-    val processComplete = Source
-      .tick(initialDelay = 26.minutes, interval = 26.minutes, drainingControl)
-      .mapAsync(1) { drainingControl =>
-        drainingControl.shutdown()
-      }
-      .take(1)
-      .runWith(Sink.ignore)
+    streamCompleted.onComplete {
+      case Success(_) =>
+        system.log.info("Stream completed successfully")
+        Await.ready(drainingControl.shutdown(), 1.minute)
+        spark.stop()
+        system.terminate()
 
-    processComplete.onComplete { _ =>
-      system.terminate()
-      spark.stop()
+      case Failure(exception) =>
+        system.log.error(exception, s"Stream failed to process record and push to Kafka")
+        Await.ready(drainingControl.shutdown(), 1.minute)
+        spark.stop()
+        system.terminate()
     }
   }
 }

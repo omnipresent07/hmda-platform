@@ -92,12 +92,12 @@ object ModifiedLarApp extends App {
   val consumerSettings: ConsumerSettings[String, String] =
     ConsumerSettings(kafkaConfig, new StringDeserializer, new StringDeserializer)
       .withBootstrapServers(kafkaHosts)
-      .withGroupId(HmdaGroups.modifiedLarGroup)
+      .withGroupId("m1_new")
       .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest")
 
   val (control, streamCompleted) =
     Consumer
-      .committableSource(consumerSettings, Subscriptions.topics(HmdaTopics.signTopic, HmdaTopics.modifiedLarTopic))
+      .committableSource(consumerSettings, Subscriptions.topics("549300ZW96EO7YCGVV43_to_549300PRPWWDL1RI5M21_m1"))
       .mapAsync(parallelism) { msg =>
         def processMsg(): Future[ConsumerMessage.CommittableOffset] = {
           log.info(s"Received a message - key: ${msg.record.key()}, value: ${msg.record.value()}")

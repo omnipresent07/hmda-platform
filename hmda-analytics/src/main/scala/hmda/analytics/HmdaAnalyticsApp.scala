@@ -67,8 +67,8 @@ object HmdaAnalyticsApp extends App with TransmittalSheetComponent with LarCompo
   val larTableName2018 = config.getString("hmda.analytics.2018.larTableName")
   //submission_history table remains same regardless of the year. There is a sign_date column and submission_id column which would show which year the filing was for
   val histTableName    = config.getString("hmda.analytics.2018.historyTableName")
-  val tsTableName2019  = config.getString("hmda.analytics.2019.tsTableName")
-  val larTableName2019 = config.getString("hmda.analytics.2019.larTableName")
+  val tsTableName2019  = "transmittalsheet2019_test"//config.getString("hmda.analytics.2019.tsTableName")
+  val larTableName2019 = "loanapplicationregister2019_test"//config.getString("hmda.analytics.2019.larTableName")
   val tsTableName2020  = config.getString("hmda.analytics.2020.tsTableName")
   val larTableName2020 = config.getString("hmda.analytics.2020.larTableName")
 
@@ -83,11 +83,11 @@ object HmdaAnalyticsApp extends App with TransmittalSheetComponent with LarCompo
   val consumerSettings: ConsumerSettings[String, String] =
     ConsumerSettings(kafkaConfig, new StringDeserializer, new StringDeserializer)
       .withBootstrapServers(kafkaHosts)
-      .withGroupId(HmdaGroups.analyticsGroup)
+      .withGroupId("analytics-slowness")
       .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
 
   Consumer
-    .committableSource(consumerSettings, Subscriptions.topics(HmdaTopics.signTopic, HmdaTopics.analyticsTopic))
+    .committableSource(consumerSettings, Subscriptions.topics("rerun_snapshot_test"))
     .mapAsync(parallelism) { msg =>
       log.info(s"Processing: $msg")
       processData(msg.record.value()).map(_ => msg.committableOffset)
@@ -243,20 +243,20 @@ object HmdaAnalyticsApp extends App with TransmittalSheetComponent with LarCompo
 
     def result =
       for {
-        _ <- deleteTsRow
-        _ = log.info(s"Deleting data from TS for  $submissionId")
+//        _ <- deleteTsRow
+//        _ = log.info(s"Deleting data from TS for  $submissionId")
 
         _ <- insertTsRow
         _ = log.info(s"Adding data into TS for  $submissionId")
 
-        _ <- deleteLarRows
-        _ = log.info(s"Done deleting data from LAR for  $submissionId")
+//        _ <- deleteLarRows
+//        _ = log.info(s"Done deleting data from LAR for  $submissionId")
 
-        larInserted <- insertLarRows
-        _ = log.info(s"Done inserting data into LAR for  $submissionId")
+        res <- insertLarRows
+//        _ = log.info(s"Done inserting data into LAR for  $submissionId")
 
-        dateSigned   <- signDate
-        res <- insertSubmissionHistory
+//        dateSigned   <- signDate
+//        res <- insertSubmissionHistory
       } yield res
     result.recover {
       case t: Throwable =>

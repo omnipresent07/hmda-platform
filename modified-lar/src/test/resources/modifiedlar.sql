@@ -1,4 +1,4 @@
-CREATE TABLE modifiedlar2019 (
+CREATE TABLE modifiedlar2019_test (
                                            id integer NOT NULL,
                                            lei character varying NOT NULL,
                                            loan_type integer,

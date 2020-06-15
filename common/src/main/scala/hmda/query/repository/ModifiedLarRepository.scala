@@ -16,7 +16,7 @@ class ModifiedLarRepository(databaseConfig: DatabaseConfig[JdbcProfile]) {
   def fetchYearTable(year: Int): String =
     year match {
       case 2018 => "modifiedlar2018"
-      case 2019 => "modifiedlar2019"
+      case 2019 => "modifiedlar2019_test"
       case _    => "modifiedlar2019"
     }
 

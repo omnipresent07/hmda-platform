@@ -186,7 +186,7 @@ trait PublisherComponent2019 {
   }
 
   class LarTable(tag: Tag)
-      extends Table[LarEntityImpl2019](tag, "loanapplicationregister2019") {
+      extends Table[LarEntityImpl2019](tag, "loanapplicationregister2019_test") {
 
     def id = column[Int]("id")
     def lei = column[String]("lei")
@@ -517,7 +517,7 @@ trait PublisherComponent2019 {
   }
 
   class ModifiedLarTable(tag: Tag)
-    extends Table[ModifiedLarEntityImpl](tag, "modifiedlar2019") {
+    extends Table[ModifiedLarEntityImpl](tag, "modifiedlar2019_test") {
 
     def id = column[Int]("id")
     def lei = column[String]("lei")

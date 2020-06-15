@@ -137,8 +137,8 @@ object ModifiedLarPublisher {
                 RunnableGraph.fromGraph(
                   GraphDSL.create(mlarSource, s3SinkWithHeader, s3Sink, postgresOut(2))((_, s3HeaderMat, s3NoHeaderMat, pgMat) =>
                     for {
-                      _ <- s3HeaderMat
-                      _ <- s3NoHeaderMat
+//                      _ <- s3HeaderMat
+//                      _ <- s3NoHeaderMat
                       _ <- pgMat
                     } yield akka.Done.done()
                   ) { implicit builder => (source, headerSink, noHeaderSink, pgSink) =>
@@ -166,10 +166,8 @@ object ModifiedLarPublisher {
               val graphWithoutS3 = mlarGraphWithoutS3
 
               val finalResult: Future[Unit] = for {
-                _ <- removeLei
-                _ <- if (isGenerateS3File) graphWithS3.run()
-                else graphWithoutS3.run()
-                _ <- produceRecord(disclosureTopic, submissionId.lei, submissionId.toString, kafkaProducer)
+//                _ <- removeLei
+                _ <- graphWithS3.run()
               } yield ()
 
               finalResult.onComplete {

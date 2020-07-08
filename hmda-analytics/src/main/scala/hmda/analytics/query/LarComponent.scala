@@ -271,7 +271,6 @@ trait LarComponent {
           ${le.reverseMortgage},
           ${le.lineOfCredits},
           ${le.businessOrCommercial},
-          ${le.businessOrCommercial},
           ${le.conformingLoanLimit},
           ${le.ethnicityCategorization},
           ${le.raceCategorization},

@@ -270,7 +270,22 @@ trait LarComponent {
           ${le.otherAusResult},
           ${le.reverseMortgage},
           ${le.lineOfCredits},
-          ${le.businessOrCommercial}
+          ${le.businessOrCommercial},
+          ${le.businessOrCommercial},
+          ${le.conformingLoanLimit},
+          ${le.ethnicityCategorization},
+          ${le.raceCategorization},
+          ${le.sexCategorization},
+          ${le.dwellingCategorization},
+          ${le.loanProductTypeCategorization},
+          ${le.tractPopulation},
+          ${le.tractMinorityPopulationPercent},
+          ${le.tractMedianIncome},
+          ${le.tractOccupiedUnits},
+          ${le.tractOneToFourFamilyUnits},
+          ${le.tractMedianAge},
+          ${le.tractToMsaIncomePercent},
+          ${le.isQuarterly}
         )
         """
       }

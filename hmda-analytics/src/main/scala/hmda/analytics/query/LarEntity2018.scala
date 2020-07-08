@@ -126,7 +126,8 @@ case class LarEntity2018(
     tractToMsaIncomePercent: Double = 0.0,
     isQuarterly: Boolean = false,
     msa_md: String,
-    msa_md_name: String
+    msa_md_name: String,
+    conformingLoanLimitOld: String = "",
 ) {
   def isEmpty: Boolean = lei == ""
 }

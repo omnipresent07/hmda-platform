@@ -6,7 +6,7 @@ import hmda.census.records.CensusRecords
 import hmda.census.records.CountyLoanLimitRecords.{countyLoansLimitByCounty, countyLoansLimitByState, overallLoanLimits, parseCountyLoanLimitFile}
 import hmda.model.census.{Census, CountyLoanLimit}
 import hmda.model.filing.lar.LoanApplicationRegister
-import hmda.parser.derivedFields.{ConformingLoanLimit, DwellingCategorization, EthnicityCategorization, LoanProductTypeCategorization, RaceCategorization, SexCategorization}
+import hmda.parser.derivedFields.{ConformingLoanLimit, ConformingLoanLimitOld, DwellingCategorization, EthnicityCategorization, LoanProductTypeCategorization, RaceCategorization, SexCategorization}
 
 object LarConverter2018 {
   val config = ConfigFactory.load()
@@ -176,7 +176,8 @@ object LarConverter2018 {
     census.tracttoMsaIncomePercent,
       false,
     census.msaMd.toString,
-    census.name
+    census.name,
+      ConformingLoanLimitOld.assignLoanLimit(lar, overallLoanLimit, countyLoanLimitsByCounty, countyLoanLimitsByState),
     )
   }
 

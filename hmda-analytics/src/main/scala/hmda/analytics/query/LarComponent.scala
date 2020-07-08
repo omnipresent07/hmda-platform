@@ -284,7 +284,8 @@ trait LarComponent {
           ${le.tractOneToFourFamilyUnits},
           ${le.tractMedianAge},
           ${le.tractToMsaIncomePercent},
-          ${le.isQuarterly}
+          ${le.isQuarterly},
+          ${le.conformingLoanLimitOld}
         )
         """
       }

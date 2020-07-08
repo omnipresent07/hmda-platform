@@ -64,7 +64,7 @@ object HmdaAnalyticsApp extends App with TransmittalSheetComponent with LarCompo
    * to BETA
    */
   val tsTableName2018  = config.getString("hmda.analytics.2018.tsTableName")
-  val larTableName2018 = "loanapplicationregister2018_snapshot_new_cl_flag"
+  val larTableName2018 = "loanapplicationregister2018_snapshot_old_and_new_cl_flag"
   //submission_history table remains same regardless of the year. There is a sign_date column and submission_id column which would show which year the filing was for
   val histTableName    = config.getString("hmda.analytics.2018.historyTableName")
   val tsTableName2019  = config.getString("hmda.analytics.2019.tsTableName")
@@ -83,11 +83,11 @@ object HmdaAnalyticsApp extends App with TransmittalSheetComponent with LarCompo
   val consumerSettings: ConsumerSettings[String, String] =
     ConsumerSettings(kafkaConfig, new StringDeserializer, new StringDeserializer)
       .withBootstrapServers(kafkaHosts)
-      .withGroupId("lar2018-snapshot-new-cl-flag")
+      .withGroupId("2018-snapshot-regenerate")
       .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
 
   Consumer
-    .committableSource(consumerSettings, Subscriptions.topics("lar2018-snapshot-new-cl-flag", HmdaTopics.analyticsTopic))
+    .committableSource(consumerSettings, Subscriptions.topics("2018-snapshot-old-new-cl-flag", HmdaTopics.analyticsTopic))
     .mapAsync(parallelism) { msg =>
       log.info(s"Processing: $msg")
       processData(msg.record.value()).map(_ => msg.committableOffset)

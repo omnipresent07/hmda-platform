@@ -110,7 +110,23 @@ case class LarEntity2018(
     otherAusResult: String = "",
     reverseMortgage: Int = 0,
     lineOfCredits: Int = 0,
-    businessOrCommercial: Int = 0
+    businessOrCommercial: Int = 0,
+    conformingLoanLimit: String = "",
+    ethnicityCategorization: String = "",
+    raceCategorization: String = "",
+    sexCategorization: String = "",
+    dwellingCategorization: String = "",
+    loanProductTypeCategorization: String = "",
+    tractPopulation: Int = 0,
+    tractMinorityPopulationPercent: Double = 0.0,
+    tractMedianIncome: Int = 0,
+    tractOccupiedUnits: Int = 0,
+    tractOneToFourFamilyUnits: Int = 0,
+    tractMedianAge: Int = 0,
+    tractToMsaIncomePercent: Double = 0.0,
+    isQuarterly: Boolean = false,
+    msa_md: String,
+    msa_md_name: String
 ) {
   def isEmpty: Boolean = lei == ""
 }

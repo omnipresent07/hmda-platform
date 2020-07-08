@@ -1,10 +1,55 @@
 package hmda.analytics.query
 
+import com.typesafe.config.ConfigFactory
+import hmda.analytics.query.LarConverter.{censusTractMap, getOverallLoanLimit, getcountyLoanLimitsByCounty, getcountyLoanLimitsByState}
+import hmda.census.records.CensusRecords
+import hmda.census.records.CountyLoanLimitRecords.{countyLoansLimitByCounty, countyLoansLimitByState, overallLoanLimits, parseCountyLoanLimitFile}
+import hmda.model.census.{Census, CountyLoanLimit}
 import hmda.model.filing.lar.LoanApplicationRegister
+import hmda.parser.derivedFields.{ConformingLoanLimit, DwellingCategorization, EthnicityCategorization, LoanProductTypeCategorization, RaceCategorization, SexCategorization}
 
 object LarConverter2018 {
+  val config = ConfigFactory.load()
+
+  val censusFileName2019 =
+    config.getString("hmda.census.fields.2019.filename")
+
+  val censusTractMap: Map[String, Census] =
+    CensusRecords.indexedTract2019
+
+  val censusRecords = CensusRecords.parseCensusFile(censusFileName2019)
+
+  val countyLoanLimitFileName2018 =
+    config.getString("hmda.countyLoanLimit.2018.fields.filename")
+  val countyLoanLimitFileName2019 =
+    config.getString("hmda.countyLoanLimit.2019.fields.filename")
+  val countyLoanLimitFileName2020 =
+    config.getString("hmda.countyLoanLimit.2020.fields.filename")
+
+  val countyLoanLimits2018: Seq[CountyLoanLimit] =
+    parseCountyLoanLimitFile(countyLoanLimitFileName2018)
+  val countyLoanLimits2019: Seq[CountyLoanLimit] =
+    parseCountyLoanLimitFile(countyLoanLimitFileName2019)
+  val countyLoanLimits2020: Seq[CountyLoanLimit] =
+    parseCountyLoanLimitFile(countyLoanLimitFileName2020)
+
+  val overallLoanLimit2018 = overallLoanLimits(countyLoanLimits2018)
+  val overallLoanLimit2019 = overallLoanLimits(countyLoanLimits2019)
+  val overallLoanLimit2020 = overallLoanLimits(countyLoanLimits2020)
+
+  val countyLoanLimitsByCounty2018 = countyLoansLimitByCounty(countyLoanLimits2018)
+  val countyLoanLimitsByCounty2019 = countyLoansLimitByCounty(countyLoanLimits2019)
+  val countyLoanLimitsByCounty2020 = countyLoansLimitByCounty(countyLoanLimits2020)
+
+  val countyLoanLimitsByState2018 = countyLoansLimitByState(countyLoanLimits2018)
+  val countyLoanLimitsByState2019 = countyLoansLimitByState(countyLoanLimits2019)
+  val countyLoanLimitsByState2020 = countyLoansLimitByState(countyLoanLimits2020)
 
   def apply(lar: LoanApplicationRegister): LarEntity2018 = {
+    val census = censusTractMap.getOrElse(lar.geography.tract, Census())
+    val overallLoanLimit = getOverallLoanLimit(2018)
+    val countyLoanLimitsByCounty = getcountyLoanLimitsByCounty(2018)
+    val countyLoanLimitsByState = getcountyLoanLimitsByState(2018)
     LarEntity2018(
       lar.larIdentifier.id,
       lar.larIdentifier.LEI,
@@ -115,11 +160,52 @@ object LarConverter2018 {
       lar.ausResult.otherAusResult,
       lar.reverseMortgage.code,
       lar.lineOfCredit.code,
-      lar.businessOrCommercialPurpose.code
+      lar.businessOrCommercialPurpose.code,
+        ConformingLoanLimit.assignLoanLimit(lar, overallLoanLimit, countyLoanLimitsByCounty, countyLoanLimitsByState),
+    EthnicityCategorization.assignEthnicityCategorization(lar),
+    RaceCategorization.assignRaceCategorization(lar),
+    SexCategorization.assignSexCategorization(lar),
+    DwellingCategorization.assignDwellingCategorization(lar),
+    LoanProductTypeCategorization.assignLoanProductTypeCategorization(lar),
+    census.population,
+    census.minorityPopulationPercent,
+    census.medianIncome,
+    census.occupiedUnits,
+    census.oneToFourFamilyUnits,
+    census.medianAge,
+    census.tracttoMsaIncomePercent,
+      false,
+    census.msaMd.toString,
+    census.name
     )
   }
 
   private def convertEmptyField(code: Int) =
     if (code == 0) "" else code.toString
+
+
+  private def getcountyLoanLimitsByCounty(year: Int) = {
+    year match {
+      case 2018 => countyLoanLimitsByCounty2018
+      case 2019 => countyLoanLimitsByCounty2019
+      case 2020 => countyLoanLimitsByCounty2020
+    }
+  }
+
+  private def getcountyLoanLimitsByState(year: Int) = {
+    year match {
+      case 2018 => countyLoanLimitsByState2018
+      case 2019 => countyLoanLimitsByState2019
+      case 2020 => countyLoanLimitsByState2020
+    }
+  }
+
+  private def getOverallLoanLimit(year: Int) = {
+    year match {
+      case 2018 => overallLoanLimit2018
+      case 2019 => overallLoanLimit2019
+      case 2020 => overallLoanLimit2020
+    }
+  }
 
 }

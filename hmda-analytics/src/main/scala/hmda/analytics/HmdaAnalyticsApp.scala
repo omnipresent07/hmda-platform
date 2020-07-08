@@ -83,11 +83,11 @@ object HmdaAnalyticsApp extends App with TransmittalSheetComponent with LarCompo
   val consumerSettings: ConsumerSettings[String, String] =
     ConsumerSettings(kafkaConfig, new StringDeserializer, new StringDeserializer)
       .withBootstrapServers(kafkaHosts)
-      .withGroupId("2018-snapshot-regenerate")
+      .withGroupId("2018-snapshot-regenerate-try")
       .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
 
   Consumer
-    .committableSource(consumerSettings, Subscriptions.topics("2018-snapshot-old-new-cl-flag", HmdaTopics.analyticsTopic))
+    .committableSource(consumerSettings, Subscriptions.topics("2018-snapshot-old-new-cl-flag-try", HmdaTopics.analyticsTopic))
     .mapAsync(parallelism) { msg =>
       log.info(s"Processing: $msg")
       processData(msg.record.value()).map(_ => msg.committableOffset)
@@ -254,7 +254,7 @@ object HmdaAnalyticsApp extends App with TransmittalSheetComponent with LarCompo
 
         larInserted <- insertLarRows
         _ = log.info(s"Done inserting data into LAR for  $submissionId")
-
+//
 //        dateSigned   <- signDate
 //        res <- insertSubmissionHistory
       } yield larInserted

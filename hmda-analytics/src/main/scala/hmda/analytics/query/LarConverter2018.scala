@@ -177,7 +177,7 @@ object LarConverter2018 {
       false,
     census.msaMd.toString,
     census.name,
-      ConformingLoanLimitOld.assignLoanLimit(lar, overallLoanLimit, countyLoanLimitsByCounty, countyLoanLimitsByState),
+      ConformingLoanLimitOld.assignLoanLimit(lar, overallLoanLimit, countyLoanLimitsByCounty, countyLoanLimitsByState)
     )
   }
 

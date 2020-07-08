@@ -127,7 +127,7 @@ case class LarEntity2018(
     isQuarterly: Boolean = false,
     msa_md: String,
     msa_md_name: String,
-    conformingLoanLimitOld: String = "",
+    conformingLoanLimitOld: String = "old-conforming-flag",
 ) {
   def isEmpty: Boolean = lei == ""
 }

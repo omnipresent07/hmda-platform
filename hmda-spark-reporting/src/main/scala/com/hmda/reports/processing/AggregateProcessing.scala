@@ -64,7 +64,7 @@ object AggregateProcessing {
         .option("upperBound", 99999)
         .option(
           "dbtable",
-          s"(select * from modifiedlar2019_snapshot where filing_year = $year and state <> 'NA' and county <> 'NA' and lei not in ('BANK1LEIFORTEST12345','BANK3LEIFORTEST12345','BANK4LEIFORTEST12345','999999LE3ZOZXUS7W648','28133080042813308004','B90YWS6AFX2LGWOXJ1LD')) as mlar"
+          s"(select * from modifiedlar2018prod where filing_year = $year and state <> 'NA' and county <> 'NA' and lei = '549300R9XZ3VYIG5O043' and lei not in ('BANK1LEIFORTEST12345','BANK3LEIFORTEST12345','BANK4LEIFORTEST12345','999999LE3ZOZXUS7W648','28133080042813308004','B90YWS6AFX2LGWOXJ1LD')) as mlar"
         )
         .load()
         .withColumnRenamed("race_categorization", "race")
@@ -79,7 +79,7 @@ object AggregateProcessing {
         .option("url", jdbcUrl)
         .option(
           "dbtable",
-          s"(select lei as institution_lei, respondent_name from institutions2019_snapshot where hmda_filer = true) as institutions2019"
+          s"(select lei as institution_lei, respondent_name from institutions2018prod where hmda_filer = true) as institutions2018"
         )
         .load()
         .cache()
@@ -462,7 +462,7 @@ object AggregateProcessing {
         OutReportedInstitutions(
           "I",
           "Aggregate",
-          "List of financial institutions whose data make up the 2019 MSA/MD aggregate report",
+          "List of financial institutions whose data make up the 2018 MSA/MD aggregate report",
           year,
           dateFormat.format(new java.util.Date()),
           msaMd,

@@ -211,7 +211,7 @@ object DisclosureProcessingWorker {
         .option("url", jdbcUrl)
         .option(
           "dbtable",
-          s"(select lei, respondent_name as institutionName from institutions2019prod where lei = '$lei' and hmda_filer = true) as institutions2019"
+          s"(select lei, respondent_name as institutionName from institutions2018prod where lei = '$lei' and hmda_filer = true and lei = '549300R9XZ3VYIG5O043') as institutions2018"
         )
         .load()
         .as[Institution]
@@ -223,7 +223,7 @@ object DisclosureProcessingWorker {
         .format("jdbc")
         .option("driver", "org.postgresql.Driver")
         .option("url", jdbcUrl)
-        .option("dbtable", s"(select * from modifiedlar2019prod where lei = '$lei' and filing_year = $year) as mlar")
+        .option("dbtable", s"(select * from modifiedlar2018prod where lei = '$lei' and filing_year = $year and lei = '549300R9XZ3VYIG5O043') as mlar")
         .load()
         .cache()
 

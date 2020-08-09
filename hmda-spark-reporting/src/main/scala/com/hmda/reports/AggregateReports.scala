@@ -99,7 +99,7 @@ object AggregateReports {
           lookupMap = lookupMap,
           jdbcUrl = JDBC_URL,
           bucket = AWS_BUCKET,
-          year = "2019"
+          year = "2018"
         )).map(_ => msg.committableOffset)
       }
       .async

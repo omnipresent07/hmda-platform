@@ -86,7 +86,7 @@ object AggregateReports {
                        new StringDeserializer,
                        new StringDeserializer)
         .withBootstrapServers(sys.env("KAFKA_HOSTS"))
-        .withGroupId(HmdaTopics.adTopic)
+        .withGroupId("hmda-spark-aggregate-2018")
         .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
 
     Consumer

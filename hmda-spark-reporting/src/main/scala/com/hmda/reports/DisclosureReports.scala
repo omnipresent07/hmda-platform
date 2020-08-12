@@ -95,7 +95,7 @@ object DisclosureReports {
 
     val (drainingControl, streamCompleted) = Consumer
       .committableSource(consumerSettings,
-        Subscriptions.topics(HmdaTopics.disclosureTopic))
+        Subscriptions.topics("hmda-spark-disclosure-2018"))
       // async boundary begin
       .async
       .mapAsync(1) { msg =>

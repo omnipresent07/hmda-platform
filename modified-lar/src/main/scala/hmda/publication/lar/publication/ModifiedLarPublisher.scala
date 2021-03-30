@@ -46,9 +46,9 @@ object ModifiedLarPublisher {
   val region                    = config.getString("aws.region")
   val bucket                    = config.getString("aws.public-bucket")
   val environment               = config.getString("aws.environment")
-  val isGenerateBothS3Files          = config.getBoolean("hmda.lar.modified.generateS3Files")
-  val isCreateDispositionRecord = config.getBoolean("hmda.lar.modified.creteDispositionRecord")
-  val isJustGenerateS3File = config.getBoolean("hmda.lar.modified.justGenerateS3File")
+  val isGenerateBothS3Files          = true
+  val isCreateDispositionRecord = false
+  val isJustGenerateS3File = false
   val isJustGenerateS3FileHeader = config.getBoolean("hmda.lar.modified.justGenerateS3FileHeader")
 
   val awsCredentialsProvider = StaticCredentialsProvider.create(AwsBasicCredentials.create(accessKeyId, secretAccess))
@@ -172,7 +172,6 @@ object ModifiedLarPublisher {
               val graphWithJustS3WithHeader = mlarSource.via(serializeMlar).prepend(mlarHeader).toMat(s3SinkWithHeader)(Keep.right)
 
               val finalResult: Future[Unit] = for {
-                _ <- removeLei
                 _ <- if (isGenerateBothS3Files)
                   graphWithS3AndPG.run()
                 else if (isJustGenerateS3File)
@@ -180,8 +179,8 @@ object ModifiedLarPublisher {
                 else if (isJustGenerateS3FileHeader)
                   graphWithJustS3WithHeader.run()
                 else //everything
-                  Future.sequence(List(graphWithJustS3NoHeader.run(), graphWithJustS3WithHeader.run(), graphWithJustPG.run()))
-                _ <- produceRecord(disclosureTopic, submissionId.lei, submissionId.toString, kafkaProducer)
+                  Future.sequence(List(graphWithJustS3NoHeader.run(), graphWithJustS3WithHeader.run()))
+//                _ <- produceRecord(disclosureTopic, submissionId.lei, submissionId.toString, kafkaProducer)
               } yield ()
 
               finalResult.onComplete {

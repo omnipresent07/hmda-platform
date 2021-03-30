@@ -96,12 +96,12 @@ object ModifiedLarApp extends App {
   val consumerSettings: ConsumerSettings[String, String] =
     ConsumerSettings(kafkaConfig, new StringDeserializer, new StringDeserializer)
       .withBootstrapServers(kafkaHosts)
-      .withGroupId(HmdaGroups.modifiedLarGroup)
+      .withGroupId("regenerate-mlar-group")
       .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest")
 
   val (control, streamCompleted) =
     Consumer
-      .committableSource(consumerSettings, Subscriptions.topics(HmdaTopics.signTopic, HmdaTopics.modifiedLarTopic))
+      .committableSource(consumerSettings, Subscriptions.topics("regenerate-mlar-2020-1"))
       .mapAsync(parallelism)(
         HmdaMessageFilter.processOnlyValidKeys { msg =>
           def processMsg(): Future[ConsumerMessage.CommittableOffset] = {

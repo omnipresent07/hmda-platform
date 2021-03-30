@@ -172,11 +172,11 @@ object ModifiedLarPublisher {
               val graphWithJustS3WithHeader = mlarSource.via(serializeMlar).prepend(mlarHeader).toMat(s3SinkWithHeader)(Keep.right)
 
               val finalResult: Future[Unit] = for {
-                _ <- if (isGenerateBothS3Files)
+                _ <- if (false)
                   graphWithS3AndPG.run()
-                else if (isJustGenerateS3File)
+                else if (false)
                   graphWithJustS3NoHeader.run()
-                else if (isJustGenerateS3FileHeader)
+                else if (true)
                   graphWithJustS3WithHeader.run()
                 else //everything
                   Future.sequence(List(graphWithJustS3NoHeader.run(), graphWithJustS3WithHeader.run()))

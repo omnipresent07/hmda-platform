@@ -47,6 +47,14 @@ private class DataBrowserHttpApi(log: Logger, fileCache: S3FileService, query: Q
 
   val dataBrowserRoutes: Route =
     encodeResponse {
+      pathPrefix("test") {
+        // sample endpoint to test headers
+        (get) {
+          complete (
+
+          )
+        }
+      } ~
       pathPrefix("view") {
         pathPrefix("count") {
           extractCountFields { countFields =>

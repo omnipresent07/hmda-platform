@@ -12,7 +12,7 @@ object DateGenerator {
     val now = LocalDateTime.now().minusDays(1)
     fullDate.format(now)
   }
-  
+
 
   def currentQuarterlyDate = {
     val now = LocalDateTime.now().minusDays(1)

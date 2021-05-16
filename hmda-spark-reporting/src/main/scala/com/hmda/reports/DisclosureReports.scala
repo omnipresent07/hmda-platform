@@ -11,8 +11,9 @@ import akka.stream.alpakka.s3.{MemoryBufferType, S3Settings}
 import akka.stream.scaladsl._
 import akka.pattern.ask
 import akka.util.Timeout
-import com.amazonaws.auth.{AWSStaticCredentialsProvider, BasicAWSCredentials}
-import com.amazonaws.regions.AwsRegionProvider
+import software.amazon.awssdk.regions.Region
+import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
+import software.amazon.awssdk.regions.providers.AwsRegionProvider
 import com.hmda.reports.model.StateMapping
 import com.hmda.reports.processing.DisclosureProcessing
 import com.hmda.reports.processing.DisclosureProcessing.ProcessDisclosureKafkaRecord
@@ -45,11 +46,12 @@ object DisclosureReports {
     val AWS_SECRET_KEY = sys.env("SECRET_KEY").trim()
     val AWS_BUCKET = sys.env("AWS_ENV").trim()
 
-    val awsCredentialsProvider = new AWSStaticCredentialsProvider(
-      new BasicAWSCredentials(AWS_ACCESS_KEY, AWS_SECRET_KEY))
+//    val awsCredentialsProvider = new AWSStaticCredentialsProvider(
+//      new BasicAWSCredentials(AWS_ACCESS_KEY, AWS_SECRET_KEY))
+val awsCredentialsProvider = StaticCredentialsProvider.create(AwsBasicCredentials.create(AWS_ACCESS_KEY, AWS_SECRET_KEY))
     val region = "us-east-1"
     val awsRegionProvider = new AwsRegionProvider {
-      override def getRegion: String = region
+      override def getRegion: Region = Region.of(region)
     }
     val s3Settings = S3Settings(
       MemoryBufferType,

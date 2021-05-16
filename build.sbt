@@ -6,6 +6,10 @@ lazy val commonDeps = Seq(logback, scalaTest, scalaCheck, akkaHttpSprayJson, emb
 
 lazy val sparkDeps =
   Seq(
+    sparkCore,
+    sparkSql,
+    sparkStreaming,
+    sparkKafka,
     postgres,
     akkaKafkaStreams
   )
@@ -89,6 +93,7 @@ lazy val `hmda-root` = (project in file("."))
     `hmda-reporting`,
     `ratespread-calculator`,
     `data-browser`,
+    `hmda-spark-reporting`,
     `submission-errors`
   )
 
@@ -117,6 +122,39 @@ lazy val common = (project in file("common"))
     buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion, latestGitTag),
     buildInfoPackage := "hmda"
   )
+
+lazy val `hmda-spark-reporting` = (project in file("hmda-spark-reporting"))
+  .enablePlugins(sbtdocker.DockerPlugin, AshScriptPlugin)
+  .settings(hmdaBuildSettings: _*)
+  .settings(
+    Seq(
+      mainClass in assembly := Some("com.hmda.reports.DisclosureReports"),
+      assemblyJarName in assembly := "hmda-reports.jar",
+      assemblyMergeStrategy in assembly := {
+        case PathList("javax", "servlet", xs @ _*)        => MergeStrategy.last
+        case PathList("javax", "activation", xs @ _*)     => MergeStrategy.last
+        case PathList("org", "apache", xs @ _*)           => MergeStrategy.last
+        case PathList("com", "google", xs @ _*)           => MergeStrategy.last
+        case PathList("com", "esotericsoftware", xs @ _*) => MergeStrategy.last
+        case PathList("com", "codahale", xs @ _*)         => MergeStrategy.last
+        case PathList("com", "yammer", xs @ _*)           => MergeStrategy.last
+        case "META-INF/io.netty.versions.properties"      => MergeStrategy.concat
+        case "META-INF/ECLIPSEF.RSA"                      => MergeStrategy.last
+        case "META-INF/mailcap"                           => MergeStrategy.last
+        case "META-INF/mimetypes.default"                 => MergeStrategy.last
+        case "plugin.properties"                          => MergeStrategy.last
+        case "log4j.properties"                           => MergeStrategy.last
+        case "module-info.class" => MergeStrategy.concat
+        case x =>
+          val oldStrategy = (assemblyMergeStrategy in assembly).value
+          oldStrategy(x)
+      }
+    ),
+    Seq(libraryDependencies ++= sparkDeps ++ circeDeps ++ akkaDeps),
+    dockerSettings,
+    packageSettings
+  )
+  .dependsOn(common % "compile->compile;test->test")
 
 lazy val `hmda-platform` = (project in file("hmda"))
   .enablePlugins(

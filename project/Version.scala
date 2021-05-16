@@ -40,4 +40,5 @@ object Version {
   val kantantCsv             = "0.6.1"
   val scalacheckShapeless    = "1.2.3"
   val diffx    = "0.4.0"
+  val spark                  = "2.4.0"
 }

@@ -81,4 +81,9 @@ object Dependencies {
   lazy val alpakkaFile           = "com.lightbend.akka"         %% "akka-stream-alpakka-file"   % Version.alpkakkaFile
   lazy val scalacheckShapeless   = "com.github.alexarchambault" %% "scalacheck-shapeless_1.14"  % Version.scalacheckShapeless % Test
   lazy val diffx                 = "com.softwaremill.diffx"     %% "diffx-core"                 % Version.diffx % Test
+
+  lazy val sparkCore      = "org.apache.spark" %% "spark-core"                 % Version.spark % Provided
+  lazy val sparkSql       = "org.apache.spark" %% "spark-sql"                  % Version.spark % Provided
+  lazy val sparkStreaming = "org.apache.spark" %% "spark-streaming"            % Version.spark % Provided
+  lazy val sparkKafka     = "org.apache.spark" %% "spark-streaming-kafka-0-10" % Version.spark
 }

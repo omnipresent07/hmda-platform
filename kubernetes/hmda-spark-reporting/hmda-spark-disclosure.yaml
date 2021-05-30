@@ -21,7 +21,7 @@ spec:
   driver:
     cores: 2
     coreLimit: "4000m"
-    memory: "8g"
+    memory: "16g"
     labels:
       version: 2.4.0
 #    affinity:
@@ -61,7 +61,7 @@ spec:
   executor:
     cores: 2
     instances: 2
-    memory: "8g"
+    memory: "16g"
     labels:
       version: 2.4.0
 #    affinity:

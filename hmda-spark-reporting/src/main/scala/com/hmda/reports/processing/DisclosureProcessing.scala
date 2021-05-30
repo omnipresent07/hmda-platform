@@ -1,21 +1,45 @@
 package com.hmda.reports.processing
 
 import akka.Done
-import akka.actor.{ Actor, ActorLogging, Props }
-import akka.stream._
-import akka.stream.scaladsl._
+import akka.actor.SupervisorStrategy.Restart
+import akka.actor.{Actor, ActorLogging, OneForOneStrategy, Props, SupervisorStrategy}
 import akka.pattern.pipe
+import akka.stream._
 import akka.stream.alpakka.s3.S3Settings
+import akka.stream.scaladsl._
 import com.hmda.reports.model._
+import com.hmda.reports.processing.DisclosureProcessingWorker.ProcessDisclosureKafkaRecord
 import io.circe.generic.auto._
 import io.circe.syntax._
-import org.apache.spark.sql.{ SparkSession, _ }
+import org.apache.spark.sql.{SparkSession, _}
 
 import scala.concurrent._
-import scala.util.{ Failure, Success, Try }
+import scala.concurrent.duration._
+import scala.util.{Failure, Success, Try}
 
-class DisclosureProcessing(spark: SparkSession, s3Settings: S3Settings) extends Actor with ActorLogging {
-  import DisclosureProcessing._
+class DisclosureProcessingSupervisor(spark: SparkSession, s3Settings: S3Settings) extends Actor with ActorLogging {
+
+  override val supervisorStrategy: SupervisorStrategy =
+    OneForOneStrategy(maxNrOfRetries = 10, withinTimeRange = 1.minute) {
+      case e: Exception =>
+        log.error(e, "DisclosureProcessingSupervisor received an exception from child")
+        Restart
+    }
+
+  override def receive: Receive = {
+    case msg: ProcessDisclosureKafkaRecord =>
+      val originalSender = sender()
+      val worker = context.actorOf(DisclosureProcessingWorker.props(spark, s3Settings))
+      worker.tell(msg, originalSender)
+  }
+}
+
+object DisclosureProcessingSupervisor {
+  def props(spark: SparkSession, s3Settings: S3Settings): Props = Props(new DisclosureProcessingSupervisor(spark, s3Settings))
+}
+
+class DisclosureProcessingWorker(spark: SparkSession, s3Settings: S3Settings) extends Actor with ActorLogging {
+  import DisclosureProcessingWorker._
 
   implicit val mat: ActorMaterializer = ActorMaterializer()(context.system)
   implicit val ec: ExecutionContext   = context.dispatcher
@@ -24,36 +48,42 @@ class DisclosureProcessing(spark: SparkSession, s3Settings: S3Settings) extends 
     case ProcessDisclosureKafkaRecord(lei, lookupMap, jdbcUrl, bucket, year) =>
       val originalSender = sender()
       log.info(s"Beginning process for $lei")
-      processDisclosureKafkaRecord(lei, spark, lookupMap, jdbcUrl, bucket, year, s3Settings)
-        .map(_ => Finished)
+      processDisclosureKafkaRecord(lei, spark, lookupMap, jdbcUrl, bucket, year, s3Settings).map(_ => Finished)
         .pipeTo(originalSender)
-      log.info(s"Finished process for $lei")
+        .onComplete {
+          case Success(_) =>
+            log.info(s"Finished process for $lei")
+            context.stop(self)
 
+          case Failure(exception) =>
+            log.error(exception, s"Failed to complete process for $lei")
+            context.stop(self)
+        }
   }
 }
 
-object DisclosureProcessing {
+object DisclosureProcessingWorker {
   case class ProcessDisclosureKafkaRecord(
-    lei: String,
-    lookupMap: Map[(Int, Int), StateMapping],
-    jdbcUrl: String,
-    bucket: String,
-    year: String
-  )
+                                           lei: String,
+                                           lookupMap: Map[(Int, Int), StateMapping],
+                                           jdbcUrl: String,
+                                           bucket: String,
+                                           year: String
+                                         )
   case object Finished
 
   def props(sparkSession: SparkSession, s3Settings: S3Settings): Props =
-    Props(new DisclosureProcessing(sparkSession, s3Settings))
+    Props(new DisclosureProcessingWorker(sparkSession, s3Settings))
 
   def processDisclosureKafkaRecord(
-    lei: String,
-    spark: SparkSession,
-    lookupMap: Map[(Int, Int), StateMapping],
-    jdbcUrl: String,
-    bucket: String,
-    year: String,
-    s3Settings: S3Settings
-  )(implicit mat: ActorMaterializer, ec: ExecutionContext): Future[Unit] = {
+                                    lei: String,
+                                    spark: SparkSession,
+                                    lookupMap: Map[(Int, Int), StateMapping],
+                                    jdbcUrl: String,
+                                    bucket: String,
+                                    year: String,
+                                    s3Settings: S3Settings
+                                  )(implicit mat: ActorMaterializer, ec: ExecutionContext): Future[Unit] = {
     import spark.implicits._
 
     def jsonFormationTable1(msaMd: Msa, input: List[Data], leiDetails: Institution): OutDisclosure1 = {
@@ -193,7 +223,7 @@ object DisclosureProcessing {
         .format("jdbc")
         .option("driver", "org.postgresql.Driver")
         .option("url", jdbcUrl)
-        .option("dbtable", s"(select * from modifiedlar2020_snapshot where lei = '$lei' ) as mlar")
+        .option("dbtable", s"(select * from modifiedlar2020_snapshot where lei = '$lei') as mlar")
         .load()
         .cache()
 
@@ -221,7 +251,7 @@ object DisclosureProcessing {
 
     val result = for {
       _ <- persistJson(disclosuresTable1)
-      _ <- persistJson2(disclosuresTable2)
+      //      _ <- persistJson2(disclosuresTable2)
     } yield ()
 
     result.onComplete {

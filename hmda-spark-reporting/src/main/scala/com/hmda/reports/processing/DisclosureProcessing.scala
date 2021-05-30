@@ -193,7 +193,7 @@ object DisclosureProcessing {
         .format("jdbc")
         .option("driver", "org.postgresql.Driver")
         .option("url", jdbcUrl)
-        .option("dbtable", s"(select * from modifiedlar2020_snapshot where lei = '$lei' and filing_year = $year) as mlar")
+        .option("dbtable", s"(select * from modifiedlar2020_snapshot where lei = '$lei' ) as mlar")
         .load()
         .cache()
 

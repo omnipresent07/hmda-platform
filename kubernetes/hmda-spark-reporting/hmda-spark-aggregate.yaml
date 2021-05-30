@@ -26,7 +26,7 @@ spec:
   driver:
     cores: 2
     coreLimit: "4000m"
-    memory: "16g"
+    memory: "9g"
     javaOptions: "-XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap"
     labels:
       version: 2.4.0
@@ -55,8 +55,8 @@ spec:
         mountPath: "/tmp"
   executor:
     cores: 2
-    instances: 4
-    memory: "12g"
+    instances: 1
+    memory: "8g"
     javaOptions: "-XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap"
     labels:
       version: 2.4.0

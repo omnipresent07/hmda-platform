@@ -79,7 +79,6 @@ object IncomeRaceEthnicityProcessing {
   def prepare(df: DataFrame): DataFrame =
     df.filter(col("msa_md") =!= lit(0))
       .filter(upper(col("tract")) =!= lit("NA"))
-      .filter(upper(col("filing_year")) === lit(2018))
 
   def includeZeroAndNonZero(dispInput: DataFrame,
                             title: String,
@@ -366,7 +365,7 @@ object IncomeRaceEthnicityProcessing {
             "5",
             "Aggregate",
             "Disposition of applications by income, race, and ethnicity of applicant",
-            "2018",
+            "2020",
             dateFormat.format(new java.util.Date()),
             msa,
             totalGrouping
